@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baby Jumper "Jehee" - Final Version</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; }
+    canvas {
+        background: #d0f4f7;
+        display: block;
+        /* [모바일] 반응형 화면을 위한 스타일 */
+        width: 100%;
+        height: auto;
+    }
+    #uiLayer {
+      position: absolute; top: 10px; left: 10px; right: 10px;
+      display: flex; justify-content: space-between;
+      color: #0b3c5d; font-size: 24px; font-weight: bold;
+      pointer-events: none;
+    }
+    #stats { display: flex; gap: 20px; }
+    #bubbleGauge { display: flex; gap: 5px; align-items: center; }
+    .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
+    .bubble-icon.empty { opacity: 0.2; }
+    #startScreen, #winScreen, #gameOverScreen {
+      position: absolute; width: 100%; height: 100%;
+      background: linear-gradient(to bottom, #a8e0f7, #d9f7fc);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; z-index: 10; text-align: center;
+    }
+    #gameOverScreen { background: linear-gradient(to bottom, #5c5c5c, #333333); }
+    #startScreen h1, #winScreen h1, #gameOverScreen h1 { font-size: 64px; color: #ff9f1c; margin-bottom: 20px; }
+    #gameOverScreen h1 { color: #ff4d6d; }
+    #startScreen p, #winScreen p, #gameOverScreen p { font-size: 20px; color: #3282b8; margin-bottom: 30px; }
+    #gameOverScreen p { color: #cccccc; }
+    #startButton, #restartButton, #restartButtonGO {
+      padding: 15px 40px; font-size: 24px;
+      background-color: #ff9f1c; color: white;
+      border: 2px solid #e68a00; border-radius: 12px; cursor: pointer;
+      box-shadow: 0 4px #e68a00;
+    }
+    .rankingList {
+      font-size: 18px; color: #333; margin: 20px 0; text-align: left;
+      background: white; padding: 15px; border-radius: 10px; width: 300px;
+    }
+    .rankingList h3 { margin-top: 0; text-align: center;}
+
+    /* [모바일] 터치 컨트롤 버튼 스타일 */
+    #mobileControls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 120px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-sizing: border-box;
+        padding: 20px;
+        z-index: 20;
+        user-select: none;
+    }
+    #mobileControls > div {
+        display: flex;
+        gap: 20px;
+    }
+    #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn {
+        width: 70px;
+        height: 70px;
+        background-color: rgba(255, 159, 28, 0.7);
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        border: 3px solid rgba(230, 138, 0, 0.9);
+        box-shadow: 0 4px rgba(230, 138, 0, 0.9);
+    }
+    #actionBtns {
+        display: flex;
+        gap: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <h1>Baby Jumper "Jehee"</h1>
+    <p>5개의 버블로 10개의 스테이지를 정복하세요!</p>
+    <p><strong>Controls:</strong> ← → to move, A to Jump, SPACE to Bubble Jump</p>
+    <button id="startButton" disabled>게임 로딩중...</button>
+  </div>
+
+  <div id="winScreen" style="display: none;">
+    <h1>CONGRATULATIONS!</h1>
+    <p>모든 스테이지를 클리어했습니다!</p>
+    <div id="rankingList" class="rankingList"></div>
+    <button id="restartButton">Play Again</button>
+  </div>
+
+  <div id="gameOverScreen" style="display: none;">
+    <h1>GAME OVER</h1>
+    <div id="rankingListGO" class="rankingList"></div>
+    <button id="restartButtonGO">Try Again</button>
+  </div>
+
+  <div id="uiLayer">
+    <div id="stats">
+      <div id="livesDisplay">❤️ 3</div>
+      <div id="timerDisplay">⏰ 20</div>
+    </div>
+    <div id="score">Score: 0</div>
+    <div id="bubbleGauge"></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+  <audio id="bgm" src="./bgm.mp3" loop></audio>
+
+  <div id="mobileControls" style="display: none;">
+    <div id="leftBtn">←</div>
+    <div id="rightBtn">→</div>
+    <div id="actionBtns">
+      <div id="bubbleJumpBtn">BUBBLE</div>
+      <div id="jumpBtn">JUMP</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    // 게임 내부 해상도는 고정
+    canvas.width = 800; canvas.height = 600;
+
+    const worldHeight = canvas.height * 2;
+    const camera = {
+      y: worldHeight - canvas.height,
+      lerpFactor: 0.08
+    };
+
+    const babyImg = new Image(); babyImg.src = "./baby.png";
+    const platformImg = new Image(); platformImg.src = "./platform.png";
+    const bubbleImg = new Image(); bubbleImg.src = "./bubble.png";
+    const goalImg = new Image(); goalImg.src = "./milk.png";
+    const dragonImg = new Image(); dragonImg.src = "./dragon.png";
+    const bgm = document.getElementById('bgm');
+
+    let gameStarted = false, score = 0;
+    let currentStage = 1;
+    const totalStages = 10;
+    let stageTimer = 20;
+    let lastTime = 0, deltaTime = 0;
+
+    const baby = {
+      x: canvas.width / 2 - 25, y: worldHeight - 80,
+      width: 50, height: 50, speed: 4,
+      dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
+      isJumping: false, bubblesLeft: 5, maxBubbles: 5, bubbleJumpPower: -12,
+      lives: 3
+    };
+    const platforms = [], bubbles = [], enemies = [];
+    const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
+
+    const stageConfigs = [
+        { stage: 1, normal: 0, fast: 0, jumper: 0 }, { stage: 2, normal: 1, fast: 0, jumper: 0 },
+        { stage: 3, normal: 2, fast: 0, jumper: 0 }, { stage: 4, normal: 3, fast: 0, jumper: 0 },
+        { stage: 5, normal: 4, fast: 0, jumper: 0 }, { stage: 6, normal: 3, fast: 2, jumper: 0 },
+        { stage: 7, normal: 3, fast: 2, jumper: 1 }, { stage: 8, normal: 7, fast: 2, jumper: 1 },
+        { stage: 9, normal: 6, fast: 4, jumper: 2 }, { stage: 10, normal: 4, fast: 8, jumper: 3 }
+    ];
+
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const restartButtonGO = document.getElementById('restartButtonGO');
+    const startScreen = document.getElementById('startScreen');
+    const winScreen = document.getElementById('winScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const scoreText = document.getElementById('score');
+    const bubbleGauge = document.getElementById('bubbleGauge');
+    const livesDisplay = document.getElementById('livesDisplay');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const rankingList = document.getElementById('rankingList');
+    const rankingListGO = document.getElementById('rankingListGO');
+
+    function generateLevel() {
+      platforms.length = 0; enemies.length = 0;
+      platforms.push({ x: 0, y: worldHeight - 20, width: canvas.width });
+      let currentY = worldHeight - 100;
+      while (currentY > 100) {
+        let pWidth = 100 + Math.random() * 50;
+        let pX = Math.random() * (canvas.width - pWidth);
+        platforms.push({ x: pX, y: currentY, width: pWidth });
+        currentY -= 70 + Math.random() * 50;
+      }
+      const config = stageConfigs[currentStage - 1];
+      if (!config) return;
+      const spawnPlatforms = [...platforms].slice(1);
+      spawnPlatforms.sort(() => 0.5 - Math.random());
+      let platformIndex = 0;
+      const createEnemy = (type) => {
+          if (spawnPlatforms.length === 0) return;
+          const platform = spawnPlatforms[platformIndex % spawnPlatforms.length];
+          platformIndex++;
+          const enemyData = {
+              x: platform.x + platform.width / 2 - 17, y: platform.y - 35, width: 35, height: 35,
+              direction: Math.random() < 0.5 ? 1 : -1, type: type,
+              speed: 1 + Math.random() * currentStage * 0.15,
+              dy: 0, groundY: platform.y - 35, jumpPower: -7 - Math.random() * 2,
+          };
+          if (type === 'fast') { enemyData.speed *= 2; }
+          if (type === 'jumper') { enemyData.speed = 0; }
+          enemies.push(enemyData);
+      };
+      for(let i=0; i<config.normal; i++) createEnemy('normal');
+      for(let i=0; i<config.fast; i++) createEnemy('fast');
+      for(let i=0; i<config.jumper; i++) createEnemy('jumper');
+      const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
+      goal.x = topPlatform.x + (topPlatform.width / 2) - (goal.width / 2);
+      goal.y = topPlatform.y - goal.height - 15;
+    }
+
+    function startGame() {
+      startScreen.style.display = 'none';
+      winScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
+      generateLevel();
+      resetPlayerPosition();
+      bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+      update();
+    }
+    startButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', startGame);
+    restartButtonGO.addEventListener('click', startGame);
+
+    function resetPlayerPosition() {
+        stageTimer = 20; baby.x = canvas.width / 2 - 25; baby.y = worldHeight - 80;
+        baby.dy = 0; camera.y = worldHeight - canvas.height;
+        baby.bubblesLeft = baby.maxBubbles;
+    }
+
+    function handleLoseLife() {
+        baby.lives--;
+        if (baby.lives <= 0) {
+            showGameOver();
+        } else {
+            resetPlayerPosition();
+        }
+    }
+
+    function updateAndShowRanking(playerName, targetElement) {
+        let scores = JSON.parse(localStorage.getItem('babyJumperScores')) || [];
+        scores.push({ name: playerName, score: score });
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5);
+        localStorage.setItem('babyJumperScores', JSON.stringify(scores));
+        let rankingHtml = '<h3>🏆 Top 5 Scores 🏆</h3><ol>';
+        rankingHtml += scores.map(s => `<li>${s.name}: ${s.score}</li>`).join('');
+        rankingHtml += '</ol>';
+        targetElement.innerHTML = rankingHtml;
+    }
+
+    function showGameOver() {
+        gameStarted = false;
+        bgm.pause();
+        const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
+        updateAndShowRanking(playerName || "Guest", rankingListGO);
+        gameOverScreen.style.display = 'flex';
+    }
+
+    function advanceToNextStage() {
+        currentStage++;
+        if (currentStage > totalStages) {
+            showWinScreen();
+        } else {
+            score += Math.ceil(stageTimer * 10);
+            generateLevel();
+            resetPlayerPosition();
+        }
+    }
+
+    function showWinScreen() {
+        gameStarted = false;
+        bgm.pause();
+        const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
+        updateAndShowRanking(playerName || "Guest", rankingList);
+        winScreen.style.display = 'flex';
+    }
+
+    function bubbleJump() {
+      if (baby.bubblesLeft > 0 && gameStarted) {
+        baby.bubblesLeft--; baby.dy = baby.bubbleJumpPower;
+        bubbles.push({x: baby.x + baby.width / 2, y: baby.y + baby.height, radius: 15, life: 30});
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(0, -camera.y);
+      platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
+      ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)';
+      ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
+      ctx.filter = 'none';
+      enemies.forEach(e => ctx.drawImage(dragonImg, e.x, e.y, e.width, e.height));
+      ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
+      bubbles.forEach((b, index) => {
+        b.y += 2; b.radius *= 0.95; b.life--;
+        ctx.globalAlpha = b.life / 30;
+        ctx.drawImage(bubbleImg, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2);
+        if (b.life <= 0) bubbles.splice(index, 1);
+      });
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawUI() {
+        scoreText.textContent = `Stage ${currentStage} | Score: ${score}`;
+        livesDisplay.textContent = '❤️ ' + baby.lives;
+        timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
+        bubbleGauge.innerHTML = '';
+        for(let i = 0; i < baby.maxBubbles; i++) {
+            const img = document.createElement('img');
+            img.src = './bubble.png';
+            img.className = 'bubble-icon';
+            if (i >= baby.bubblesLeft) img.classList.add('empty');
+            bubbleGauge.appendChild(img);
+        }
+    }
+
+    function update(time = 0) {
+      if (!gameStarted) return;
+      deltaTime = (time - lastTime) / 1000; lastTime = time;
+      stageTimer -= deltaTime;
+      if (stageTimer <= 0) { handleLoseLife(); }
+      baby.x += baby.dx; baby.dy += baby.gravity; baby.y += baby.dy;
+      const cameraTargetY = baby.y - canvas.height / 2;
+      camera.y += (cameraTargetY - camera.y) * camera.lerpFactor;
+      if (camera.y < 0) camera.y = 0;
+      if (camera.y > worldHeight - canvas.height) { camera.y = worldHeight - canvas.height; }
+      if (baby.dy > 0) {
+        platforms.forEach(p => {
+          if (baby.x + baby.width > p.x && baby.x < p.x + p.width &&
+              baby.y + baby.height > p.y && baby.y < p.y + 20) {
+            baby.y = p.y - baby.height; baby.dy = 0; baby.isJumping = false;
+          }
+        });
+      }
+      enemies.forEach(e => {
+        switch(e.type) {
+            case 'normal': case 'fast':
+                e.x += e.speed * e.direction;
+                if(e.x < 0 || e.x + e.width > canvas.width) e.direction *= -1;
+                break;
+            case 'jumper':
+                e.dy += baby.gravity * 0.5; e.y += e.dy;
+                if (e.y > e.groundY && e.dy > 0) { e.y = e.groundY; e.dy = e.jumpPower; }
+                break;
+        }
+        if (baby.x < e.x + e.width && baby.x + baby.width > e.x &&
+            baby.y < e.y + e.height && baby.y + baby.height > e.y) {
+            handleLoseLife();
+        }
+      });
+      if (baby.x < 0) baby.x = 0;
+      if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
+      if (baby.y > worldHeight) { handleLoseLife(); }
+      if (baby.y + baby.height < 0) { baby.y = -baby.height; baby.dy = 1; }
+      if (baby.x < goal.x + goal.width && baby.x + baby.width > goal.x &&
+          baby.y < goal.y + goal.height && baby.y + baby.height > goal.y) {
+        advanceToNextStage();
+      }
+      draw();
+      drawUI();
+      requestAnimationFrame(update);
+    }
+
+    // [모바일] 터치 컨트롤러 로직
+    function setupMobileControls() {
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (!isMobile) return;
+        document.getElementById('mobileControls').style.display = 'flex';
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const jumpBtn = document.getElementById('jumpBtn');
+        const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); if (gameStarted) baby.dx = -baby.speed;
+        });
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); if (gameStarted) baby.dx = 0;
+        });
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); if (gameStarted) baby.dx = baby.speed;
+        });
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault(); if (gameStarted) baby.dx = 0;
+        });
+        jumpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameStarted && !baby.isJumping) {
+                baby.dy = baby.jumpPower; baby.isJumping = true;
+            }
+        });
+        bubbleJumpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); if (gameStarted) bubbleJump();
+        });
+    }
+    setupMobileControls();
+
+    // 키보드 입력
+    document.addEventListener('keydown', e => {
+      if (!gameStarted) return;
+      if (e.key === 'ArrowRight') baby.dx = baby.speed;
+      if (e.key === 'ArrowLeft') baby.dx = -baby.speed;
+      if ((e.key === 'a' || e.key === 'ㅁ') && !baby.isJumping) {
+        baby.dy = baby.jumpPower; baby.isJumping = true;
+      }
+      if (e.key === ' ') { e.preventDefault(); bubbleJump(); }
+    });
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
+    });
+
+    // 게임 리소스 로딩
+    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg];
+    const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
+        if (img.complete) resolve();
+        else { img.onload = resolve; img.onerror = reject; }
+    }));
+    const audioPromise = new Promise((resolve, reject) => {
+        bgm.oncanplaythrough = resolve; bgm.onerror = reject;
+    });
+
+    Promise.all([...imagePromises, audioPromise]).then(() => {
+      startButton.disabled = false; startButton.textContent = 'Start Game';
+    }).catch(error => {
+      startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
+    });
+  </script>
+</body>
+</html>
