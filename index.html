@@ -17,8 +17,8 @@
         
         /* Flexbox를 사용하여 전체 레이아웃 (게임영역 + 컨트롤)을 세로로 배치 */
         display: flex;
-        flex-direction: column; /* 자식 요소들을 세로로 정렬: 게임영역, 컨트롤 */
-        justify-content: flex-start; /* 상단에서부터 배치 (컨트롤은 하단에 고정) */
+        flex-direction: column; /* 자식 요소들을 세로로 정렬: gameContainer, mobileControls */
+        justify-content: flex-start; /* 상단에서부터 배치 */
         align-items: center; /* 가로 중앙 정렬 */
         position: relative; /* 세로 모드 메시지를 위한 기준점 */
     }
@@ -26,34 +26,35 @@
     /* 세로 모드일 때 적용되는 스타일 */
     @media screen and (orientation: portrait) {
         body {
-            transform: rotate(90deg); /* 페이지 전체를 90도 회전 */
-            transform-origin: bottom left; /* 회전 기준점을 왼쪽 아래로 설정 */
-            width: 100vh; /* 회전 후 너비는 원래 높이가 됨 */
-            height: 100vw; /* 회전 후 높이는 원래 너비가 됨 */
+            /* 세로 모드 회전 및 위치 조정 */
+            transform: rotate(90deg); 
+            transform-origin: bottom left; 
+            width: 100vh; 
+            height: 100vw; 
             position: absolute;
-            top: 100%; /* 회전 후 화면에 맞게 위치 조정 */
+            top: 100%; 
             left: 0;
-            z-index: 9990; /* 메시지 아래에 있지만 게임 요소 위 */
-            background-color: transparent; /* 메시지 배경만 보이도록 투명 처리 */
+            z-index: 9990; 
+            background-color: transparent; 
             display: block; /* 메시지를 위해 block으로 변경 (flexbox 해제) */
         }
 
         /* 세로 모드일 때 사용자에게 보여줄 메시지 (장치를 회전하라는 안내) */
         body::before {
             content: "기기를 가로 모드로 회전해주세요.";
-            position: fixed; /* 뷰포트에 고정 */
+            position: fixed; 
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9); /* 어두운 배경 */
-            color: white; /* 흰색 글씨 */
-            display: flex; /* 메시지 중앙 정렬을 위해 flex 사용 */
+            background-color: rgba(0, 0, 0, 0.9); 
+            color: white; 
+            display: flex; 
             justify-content: center;
             align-items: center;
             font-size: 24px;
             text-align: center;
-            z-index: 9999; /* 모든 다른 요소 위에 표시 */
+            z-index: 9999; 
         }
 
         /* 세로 모드일 때 모든 게임 관련 화면 및 UI를 완전히 숨김 */
@@ -65,48 +66,73 @@
     /* 새로운 게임 컨테이너: 캔버스와 UI를 포함하고 비율을 유지 */
     #gameContainer {
         position: relative; /* 내부 UI 레이어의 absolute 기준점 */
-        width: 100%;
-        height: 100%; /* 부모(body)의 남은 공간을 flex-grow로 채움 */
-        flex-grow: 1; /* body의 Flexbox 남은 공간을 차지 */
+        width: 100%; /* 부모(body)의 가로 100% */
+        flex-grow: 1; /* mobileControls를 제외한 남은 수직 공간을 모두 차지 */
         display: flex; /* 내부 캔버스 중앙 정렬용 */
-        justify-content: center;
-        align-items: center;
+        justify-content: center; /* 캔버스를 가로 중앙 정렬 */
+        align-items: center; /* 캔버스를 세로 중앙 정렬 */
         background-color: #d0f4f7; /* 게임 배경색 */
-        /* 원본 게임 비율 800:600 = 4:3 (혹은 1.33:1)을 유지하며 최대 크기 설정 */
+
+        /* 이 컨테이너가 원본 게임 비율을 유지하도록 max-width/height를 조정 */
+        /* 원본 비율 800:600 = 4:3 */
+        /* 이 컨테이너는 뷰포트 크기에 따라 유연하게 스케일되도록 합니다. */
+        /* 최대 크기를 제한하여 PC 등 큰 화면에서 너무 커지는 것을 방지 */
+        max-width: 800px; /* 이 컨테이너가 가질 수 있는 최대 너비 */
+        max-height: 600px; /* 이 컨테이너가 가질 수 있는 최대 높이 */
         /* aspect-ratio를 사용하면 더욱 강력하게 비율을 유지할 수 있습니다 (최신 브라우저 지원) */
-        /* aspect-ratio: 4 / 3; */ /* 이 속성을 쓰면 max-width/height 계산이 간단해짐 */
-        /* 이 컨테이너 자체가 실제 게임 화면이 될 것 */
+        /* aspect-ratio: 4 / 3; */ /* 이 속성을 쓰면 아래 min-height 계산이 간단해짐 */
+        /* 만약 aspect-ratio를 사용한다면 min-width/height는 보통 필요 없음 */
     }
 
     canvas {
         display: block;
         width: 100%; /* gameContainer 내에서 가로 100% */
         height: 100%; /* gameContainer 내에서 세로 100% */
-        /* object-fit: contain; 은 캔버스 내 그림에 영향을 줌.
-           여기서는 캔버스 엘리먼트 자체의 비율을 조절해야 함 */
-        /* 원본 캔버스 디자인 비율 (800x600 = 4:3)에 맞춰 크기 조정 */
-        max-width: 800px; /* 원본 디자인 너비 */
-        max-height: 600px; /* 원본 디자인 높이 */
-        /* 캔버스 자체의 비율을 유지하며 컨테이너에 맞춤 */
-        object-fit: contain; /* 캔버스 내용이 컨테이너에 맞게 스케일링되도록 함 */
+        /* 캔버스 자체의 비율을 유지하며 컨테이너에 맞춤 (JS에서 조절) */
+        /* CSS의 object-fit: contain은 캔버스 내부 그림보다는 엘리먼트 자체에 주로 적용됨 */
     }
 
     /* UI 레이어 (점수, 라이프 등): gameContainer 내에서 absolute */
     #uiLayer {
       position: absolute; /* gameContainer 기준 */
-      top: 10px; left: 10px; right: 10px;
-      display: flex; justify-content: space-between;
-      color: #0b3c5d; font-size: 24px; font-weight: bold;
+      /* 스케일링된 캔버스에 맞춰 위치와 크기 조정 (JS에서 스케일링) */
+      top: 0; left: 0; /* 캔버스 상단에 정렬 */
+      width: 100%; /* 캔버스 너비에 맞춰 */
+      height: 100%; /* 캔버스 높이에 맞춰 */
+      display: flex; 
+      flex-direction: column; /* 내용을 세로로 배치 */
+      justify-content: flex-start; /* 상단 정렬 */
       pointer-events: none; /* UI 요소 클릭 방지 */
       z-index: 50; 
-      /* UI도 게임 비율에 맞춰지도록 */
-      max-width: 800px; /* 캔버스 max-width와 동일하게 설정 */
-      margin: 0 auto; /* 가로 중앙 정렬 */
+      padding: 10px; /* 내부 여백 */
+      box-sizing: border-box; /* 패딩 포함 크기 계산 */
     }
-    #stats { display: flex; gap: 20px; }
-    #bubbleGauge { display: flex; gap: 5px; align-items: center; }
+    #uiLayer > div:first-child { /* #stats */
+        display: flex; 
+        justify-content: space-between; 
+        width: 100%;
+        margin-bottom: auto; /* 하단으로 밀어냄 */
+    }
+    #uiLayer > div:last-child { /* #bubbleGauge */
+        display: flex;
+        justify-content: flex-end; /* 오른쪽 정렬 */
+        width: 100%;
+        margin-top: auto; /* 상단으로 밀어냄 */
+    }
+    #stats { display: flex; gap: 20px; } /* 왼쪽 스탯 그룹 */
+    #bubbleGauge { display: flex; gap: 5px; align-items: center; } /* 오른쪽 버블 그룹 */
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
     .bubble-icon.empty { opacity: 0.2; }
+    #score { 
+        position: absolute; 
+        top: 10px; 
+        left: 50%; 
+        transform: translateX(-50%); /* 중앙 정렬 */
+        color: #0b3c5d; 
+        font-size: 24px; 
+        font-weight: bold;
+    }
+
 
     /* 시작/종료/승리 화면 컨테이너 */
     #startScreen, #winScreen, #gameOverScreen {
@@ -139,7 +165,6 @@
       border: 2px solid #e68a00; border-radius: 12px; cursor: pointer;
       box-shadow: 0 4px #e68a00;
       margin-top: auto; /* startScreen의 flex container 내에서 버튼을 하단으로 밀어냄 */
-      /* margin-bottom은 padding-bottom으로 대체됨 */
     }
     .rankingList {
       font-size: 18px; color: #333; margin: 20px 0; text-align: left;
@@ -149,7 +174,6 @@
 
     /* [모바일] 터치 컨트롤 버튼 스타일 */
     #mobileControls {
-        /* body의 Flexbox 컬럼의 가장 아래 요소가 됨 */
         flex-shrink: 0; /* 컨트롤 컨테이너가 줄어들지 않도록 함 */
         width: 100%;
         min-height: 100px; /* 컨트롤의 최소 높이 (버튼 크기 고려) */
@@ -157,21 +181,20 @@
         justify-content: space-between;
         align-items: center;
         box-sizing: border-box;
-        padding: 15px 20px; /* 상하 패딩 조정 */
+        padding: 15px 20px; 
         z-index: 20;
         user-select: none;
         background-color: rgba(0, 0, 0, 0.1); 
-        /* 노치 디자인/펀치홀이 있는 아이폰 등을 위한 안전 영역 패딩 */
-        padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* 기본 패딩 + 안전 영역 */
+        padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
     }
     #mobileControls > div {
         display: flex;
         gap: 20px;
     }
     #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn {
-        width: 10vh; /* 뷰포트 높이에 비례 */
+        width: 10vh; 
         height: 10vh;
-        max-width: 70px; /* 너무 커지지 않도록 최대 크기 제한 */
+        max-width: 70px; 
         max-height: 70px;
         background-color: rgba(255, 159, 28, 0.7);
         color: white;
@@ -194,12 +217,16 @@
   <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     <div id="uiLayer">
-      <div id="stats">
-        <div id="livesDisplay">❤️ 3</div>
-        <div id="timerDisplay">⏰ 20</div>
+      <div>
+        <div id="stats">
+          <div id="livesDisplay">❤️ 3</div>
+          <div id="timerDisplay">⏰ 20</div>
+        </div>
+        <div id="score">Score: 0</div>
       </div>
-      <div id="score">Score: 0</div>
-      <div id="bubbleGauge"></div>
+      <div>
+        <div id="bubbleGauge"></div>
+      </div>
     </div>
   </div>
 
@@ -243,29 +270,52 @@
 
     function resizeCanvasAndGame() {
         const gameContainer = document.getElementById('gameContainer');
-        const displayWidth = gameContainer.clientWidth; // gameContainer의 실제 너비 사용
-        const displayHeight = gameContainer.clientHeight; // gameContainer의 실제 높이 사용
+        const displayWidth = gameContainer.clientWidth; 
+        const displayHeight = gameContainer.clientHeight; 
 
-        // 캔버스 자체의 내부 드로잉 버퍼 크기를 실제 표시 크기에 맞춰 설정
-        if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
-            canvas.width = displayWidth;
-            canvas.height = displayHeight;
+        // 게임의 원본 비율 (4:3)
+        const aspectRatio = originalDesignWidth / originalDesignHeight;
+
+        let targetWidth = displayWidth;
+        let targetHeight = displayHeight;
+
+        // gameContainer가 가진 공간에 맞춰 원본 비율 유지
+        if (targetWidth / targetHeight > aspectRatio) {
+            // 화면이 원본보다 가로가 길다 -> 높이에 맞춰 너비 조절
+            targetWidth = targetHeight * aspectRatio;
+        } else {
+            // 화면이 원본보다 세로가 길다 -> 너비에 맞춰 높이 조절
+            targetHeight = targetWidth / aspectRatio;
         }
 
-        const scaleX = displayWidth / originalDesignWidth;
-        const scaleY = displayHeight / originalDesignHeight;
-        const scale = Math.min(scaleX, scaleY); // 비율 유지하며 맞춤
+        // 캔버스 엘리먼트의 크기를 조절 (CSS와 동기화)
+        canvas.style.width = targetWidth + 'px';
+        canvas.style.height = targetHeight + 'px';
 
+        // 캔버스 자체의 내부 드로잉 버퍼 크기를 조절 (선명도를 위해)
+        if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+        }
+
+        // 컨텍스트에 스케일 변환 적용
+        const scaleX = targetWidth / originalDesignWidth;
+        const scaleY = targetHeight / originalDesignHeight;
+        const scale = Math.min(scaleX, scaleY); 
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
-        // UI Layer 위치 조정 (선택 사항, CSS로 처리하고 있다면 필요 없을 수 있음)
-        // 만약 UI가 캔버스 스케일에 맞춰 움직이거나 위치가 어긋난다면 여기서 조정
-        // 예: const uiLayer = document.getElementById('uiLayer');
-        //     uiLayer.style.width = originalDesignWidth * scale + 'px';
-        //     uiLayer.style.height = originalDesignHeight * scale + 'px'; // 높이는 필요 없을수 있음
+        // UI Layer도 캔버스 크기에 맞춰 스케일 및 위치 조정 (CSS로 처리하기 위함)
+        const uiLayer = document.getElementById('uiLayer');
+        uiLayer.style.width = targetWidth + 'px';
+        uiLayer.style.height = targetHeight + 'px'; // uiLayer도 캔버스 크기만큼 차지
+        // uiLayer의 left/top은 position: absolute; top:0; left:0; 로 gameContainer 기준
+
+        // Score 텍스트의 중앙 위치 조정 (uiLayer가 스케일될 때)
+        const scoreElement = document.getElementById('score');
+        scoreElement.style.fontSize = (24 * scale) + 'px'; // 스케일에 맞춰 폰트 크기 조정
+        // 이미 CSS에서 translateX(-50%)로 중앙 정렬되고 있으므로, 여기서는 폰트 크기만 조정
     }
 
-    // resizeCanvasAndGame 함수는 이제 gameContainer의 크기 변화에 반응합니다.
     window.addEventListener('resize', resizeCanvasAndGame);
     window.addEventListener('orientationchange', resizeCanvasAndGame);
 
@@ -456,6 +506,18 @@
     }
 
     function drawUI() {
+        // UI 텍스트 크기 조정
+        const currentScale = canvas.clientWidth / originalDesignWidth;
+        scoreText.style.fontSize = (24 * currentScale) + 'px';
+        livesDisplay.style.fontSize = (24 * currentScale) + 'px';
+        timerDisplay.style.fontSize = (24 * currentScale) + 'px';
+        
+        // 버블 아이콘 크기 조정
+        Array.from(bubbleGauge.children).forEach(img => {
+            img.style.width = (30 * currentScale) + 'px';
+            img.style.height = (30 * currentScale) + 'px';
+        });
+
         scoreText.textContent = `Stage ${currentStage} | Score: ${score}`;
         livesDisplay.textContent = '❤️ ' + baby.lives;
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
@@ -526,7 +588,6 @@
             document.getElementById('mobileControls').style.display = 'none'; 
             return;
         }
-        // 기본적으로는 flex로 설정하고, orientation media query에서 display none으로 숨김
         document.getElementById('mobileControls').style.display = 'flex'; 
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
@@ -588,7 +649,6 @@
       startButton.disabled = false;
       startButton.textContent = 'Start Game';
       
-      // 리소스 로딩이 완료된 후 캔버스 크기 조정 및 모바일 컨트롤 설정
       resizeCanvasAndGame(); 
       setupMobileControls();
     }).catch(error => {
