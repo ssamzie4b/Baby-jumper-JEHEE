@@ -13,13 +13,15 @@
         width: 100vw; /* 뷰포트 너비 전체 */
         height: 100vh; /* 뷰포트 높이 전체 */
         font-family: 'Arial', sans-serif;
-        background-color: #d0f4f7; /* 게임 배경색 (기존 canvas 배경을 body로 옮김) */
+        background-color: #d0f4f7; /* 게임 배경색 */
         
-        /* Flexbox를 사용하여 게임 캔버스와 컨트롤을 세로로 배치 */
+        /* Flexbox를 사용하여 게임 캔버스와 컨트롤, 또는 시작 화면 등을 세로로 배치 */
         display: flex;
         flex-direction: column; /* 자식 요소들을 세로로 정렬 */
         justify-content: flex-end; /* 내용을 하단에 정렬 (컨트롤이 잘 보이도록) */
         align-items: center; /* 가로 중앙 정렬 */
+        /* 세로 모드 메시지를 위한 초기 z-index. Portrait media query에서 변경됨. */
+        position: relative; /* ::before 가상 요소를 위한 기준점 */
     }
 
     /* 세로 모드일 때 적용되는 스타일 */
@@ -32,69 +34,94 @@
             position: absolute;
             top: 100%; /* 회전 후 화면에 맞게 위치 조정 */
             left: 0;
-            z-index: 1000; /* 회전 메시지를 덮기 위해 Z-index를 높게 설정 */
-            background-color: black; /* 회전 메시지 배경색 */
+            /* 세로 모드 메시지를 위한 높은 z-index */
+            z-index: 9990; /* 다른 요소 위에 표시되지만 메시지 자체보다는 낮게 */
+            background-color: transparent; /* 메시지 배경색만 보이도록 투명 처리 */
+            /* 세로 모드일 때는 게임 화면 대신 메시지를 보여줄 것이므로,
+               기존 flexbox 설정은 효과적으로 숨겨집니다. */
+            display: block; /* 메시지를 위해 block으로 변경 (flexbox 해제) */
         }
 
         /* 세로 모드일 때 사용자에게 보여줄 메시지 (장치를 회전하라는 안내) */
         body::before {
             content: "기기를 가로 모드로 회전해주세요.";
-            position: fixed;
+            position: fixed; /* 뷰포트에 고정 */
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.8); /* 어두운 배경 */
+            background-color: rgba(0, 0, 0, 0.9); /* 어두운 배경 */
             color: white; /* 흰색 글씨 */
-            display: flex;
+            display: flex; /* 메시지 중앙 정렬을 위해 flex 사용 */
             justify-content: center;
             align-items: center;
             font-size: 24px;
             text-align: center;
-            z-index: 9999; /* 다른 요소 위에 표시 */
+            z-index: 9999; /* 모든 다른 요소 위에 표시 */
         }
 
-        /* 세로 모드일 때 시작/종료 화면도 회전 메시지에 덮이도록 */
-        #startScreen, #winScreen, #gameOverScreen {
-            display: none !important; /* 세로 모드에서는 시작/종료 화면을 숨김 */
+        /* 세로 모드일 때 게임 화면 및 시작/종료 화면을 완전히 숨김 */
+        #startScreen, #winScreen, #gameOverScreen, #uiLayer, canvas, #mobileControls {
+            display: none !important; 
         }
     }
 
+    /* 캔버스 스타일: 남은 공간을 유연하게 채움 */
     canvas {
         display: block;
-        width: 100%; /* 부모 너비의 100% */
+        width: 100%; 
         flex-grow: 1; /* 남은 공간을 캔버스가 모두 차지하도록 함 */
         object-fit: contain; /* 캔버스 내용이 잘리거나 왜곡되지 않고 비율을 유지하며 맞도록 */
-        max-width: 800px; /* 원래 게임 디자인 너비에 맞춰 캔버스 최대 너비 설정 */
-        max-height: 600px; /* (controls 제외) 원래 게임 디자인 높이에 맞춰 캔버스 최대 높이 설정 */
+        /* 최대 크기 제한은 논리적인 디자인 크기에만 적용 (실제 렌더링 스케일은 JS에서) */
+        max-width: 800px; /* PC 등 큰 화면에서 너무 커지지 않도록 */
+        /* max-height는 여기서는 제거, flex-grow와 controls-container의 높이가 결정 */
     }
+
+    /* UI 레이어 (점수, 라이프 등) */
     #uiLayer {
-      position: absolute; top: 10px; left: 10px; right: 10px;
+      position: absolute; 
+      top: 10px; left: 10px; right: 10px;
       display: flex; justify-content: space-between;
       color: #0b3c5d; font-size: 24px; font-weight: bold;
-      pointer-events: none;
-      z-index: 50; /* UI가 게임 위에 오도록 */
+      pointer-events: none; /* UI 요소 클릭 방지 */
+      z-index: 50; 
     }
     #stats { display: flex; gap: 20px; }
     #bubbleGauge { display: flex; gap: 5px; align-items: center; }
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
     .bubble-icon.empty { opacity: 0.2; }
+
+    /* 시작/종료/승리 화면 컨테이너 */
     #startScreen, #winScreen, #gameOverScreen {
-      position: absolute; width: 100%; height: 100%;
+      position: absolute; /* body의 flexbox에 영향을 받지 않도록 */
+      top: 0; left: 0;
+      width: 100%; height: 100%; /* 전체 화면 차지 */
       background: linear-gradient(to bottom, #a8e0f7, #d9f7fc);
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column; z-index: 10; text-align: center;
+      display: flex; 
+      flex-direction: column; /* 내부 요소 세로 정렬 */
+      align-items: center; 
+      justify-content: center; /* 세로 중앙 정렬 */
+      z-index: 100; /* 게임 위로 올라오도록 */
+      text-align: center;
+      box-sizing: border-box; /* 패딩 포함 크기 계산 */
+      padding-bottom: 20px; /* 모바일 컨트롤 영역 때문에 추가 패딩 */
     }
     #gameOverScreen { background: linear-gradient(to bottom, #5c5c5c, #333333); }
-    #startScreen h1, #winScreen h1, #gameOverScreen h1 { font-size: 64px; color: #ff9f1c; margin-bottom: 20px; }
+    #startScreen h1, #winScreen h1, #gameOverScreen h1 { 
+        font-size: 64px; color: #ff9f1c; margin-bottom: 20px; 
+    }
     #gameOverScreen h1 { color: #ff4d6d; }
-    #startScreen p, #winScreen p, #gameOverScreen p { font-size: 20px; color: #3282b8; margin-bottom: 30px; }
+    #startScreen p, #winScreen p, #gameOverScreen p { 
+        font-size: 20px; color: #3282b8; margin-bottom: 30px; 
+    }
     #gameOverScreen p { color: #cccccc; }
     #startButton, #restartButton, #restartButtonGO {
       padding: 15px 40px; font-size: 24px;
       background-color: #ff9f1c; color: white;
       border: 2px solid #e68a00; border-radius: 12px; cursor: pointer;
       box-shadow: 0 4px #e68a00;
+      margin-top: auto; /* 버튼을 하단으로 밀어냄 (startScreen의 flex container 내에서) */
+      margin-bottom: 20px; /* 모바일 컨트롤 패딩과 일관성 유지 */
     }
     .rankingList {
       font-size: 18px; color: #333; margin: 20px 0; text-align: left;
@@ -104,21 +131,20 @@
 
     /* [모바일] 터치 컨트롤 버튼 스타일 */
     #mobileControls {
-        position: relative; /* body의 flex 컨테이너 안에 배치되므로 relative */
-        bottom: auto; /* fixed 대신 relative로 변경 */
-        left: auto;
-        width: 100%;
+        /* body의 flexbox 컬럼의 가장 아래 요소가 됨 */
         flex-shrink: 0; /* 컨트롤 컨테이너가 줄어들지 않도록 함 */
+        width: 100%;
+        min-height: 100px; /* 최소 높이 지정 (버튼 크기 고려) */
         display: flex;
         justify-content: space-between;
         align-items: center;
         box-sizing: border-box;
-        padding: 20px;
+        padding: 15px 20px; /* 상하 패딩을 줄여서 공간 확보 */
         z-index: 20;
         user-select: none;
-        background-color: rgba(0, 0, 0, 0.1); /* 컨트롤 배경색 추가 */
+        background-color: rgba(0, 0, 0, 0.1); 
         /* 노치 디자인/펀치홀이 있는 아이폰 등을 위한 안전 영역 패딩 */
-        padding-bottom: env(safe-area-inset-bottom);
+        padding-bottom: calc(15px + env(safe-area-inset-bottom)); /* 기본 패딩 + 안전 영역 */
     }
     #mobileControls > div {
         display: flex;
@@ -126,7 +152,7 @@
     }
     #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn {
         /* 버튼 크기를 뷰포트 높이에 비례하게 조절 */
-        width: 10vh;
+        width: 10vh; /* 뷰포트 높이의 10% */
         height: 10vh;
         max-width: 70px; /* 너무 커지지 않도록 최대 크기 제한 */
         max-height: 70px;
@@ -193,49 +219,36 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // 게임 내부 해상도 (이제 더 이상 고정되지 않음, 초기 디자인 기준)
     const originalDesignWidth = 800; 
-    const originalDesignHeight = 600; // UI 제외한 순수 게임 화면 높이 기준
+    const originalDesignHeight = 600; 
 
-    // 초기 캔버스 크기 설정 및 리사이즈 이벤트 리스너 추가
     function resizeCanvasAndGame() {
-        // CSS에 의해 설정된 캔버스의 실제 표시 크기 가져오기
         const displayWidth = canvas.clientWidth;
         const displayHeight = canvas.clientHeight;
 
-        // 캔버스 자체의 내부 드로잉 버퍼 크기를 실제 표시 크기에 맞춰 설정
-        // 이렇게 해야 이미지가 선명하게 그려집니다.
         if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
             canvas.width = displayWidth;
             canvas.height = displayHeight;
         }
 
-        // 게임 콘텐츠 스케일 계산
-        // 캔버스 크기에 맞춰 게임 요소들을 얼마나 확대/축소할지 결정
         const scaleX = displayWidth / originalDesignWidth;
         const scaleY = displayHeight / originalDesignHeight;
+        const scale = Math.min(scaleX, scaleY); // 비율 유지하며 맞춤
 
-        // 가로세로 비율을 유지하면서 화면에 맞추려면,
-        // X 스케일과 Y 스케일 중 작은 값을 선택합니다.
-        // 이 스케일 팩터를 게임 내 그리기 로직에 적용
-        const scale = Math.min(scaleX, scaleY);
+        // 캔버스 컨텍스트 스케일 적용
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
-        // 월드 높이도 스케일에 따라 조정 (만약 게임 로직이 이를 사용한다면)
-        // 현재 코드에서는 worldHeight가 고정되어 있어서,
-        // 카메라와 베이비 위치만 조정하면 됨
-        // baby.y와 camera.y는 draw 함수에서 ctx.translate에 의해 스케일링됨
-        // 만약 게임 로직 내에서 직접 픽셀 값을 사용한다면 이 부분을 조정해야 함
+        // UI Layer 위치 조정 (캔버스 스케일링과 별개로 UI는 고정 위치여야 함)
+        // 이 부분은 CSS position: absolute로 처리되고 있으므로, JavaScript에서 직접 조정할 필요는 없음.
+        // 하지만 만약 UI 요소들이 캔버스 크기에 따라 위치가 이상해진다면, 이곳에서 직접 계산하여 설정해야 할 수 있습니다.
     }
 
-    // 창 크기 변경 및 기기 방향 변경 시 resizeCanvasAndGame 함수 호출
     window.addEventListener('resize', resizeCanvasAndGame);
     window.addEventListener('orientationchange', resizeCanvasAndGame);
 
-
-    const worldHeight = originalDesignHeight * 2; // 스케일 적용 후 이 값도 필요할 수 있음
+    const worldHeight = originalDesignHeight * 2; 
     const camera = {
-      y: worldHeight - originalDesignHeight, // 초기 카메라 위치도 originalDesignHeight 기준으로
+      y: worldHeight - originalDesignHeight, 
       lerpFactor: 0.08
     };
 
@@ -253,7 +266,6 @@
     let lastTime = 0, deltaTime = 0;
 
     const baby = {
-      // 캔버스 너비/높이 대신 originalDesignWidth/Height 기준으로 초기 위치 설정
       x: originalDesignWidth / 2 - 25, y: worldHeight - 80,
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
@@ -286,11 +298,11 @@
 
     function generateLevel() {
       platforms.length = 0; enemies.length = 0;
-      platforms.push({ x: 0, y: worldHeight - 20, width: originalDesignWidth }); // 캔버스 너비 대신 originalDesignWidth 사용
+      platforms.push({ x: 0, y: worldHeight - 20, width: originalDesignWidth });
       let currentY = worldHeight - 100;
       while (currentY > 100) {
         let pWidth = 100 + Math.random() * 50;
-        let pX = Math.random() * (originalDesignWidth - pWidth); // 캔버스 너비 대신 originalDesignWidth 사용
+        let pX = Math.random() * (originalDesignWidth - pWidth);
         platforms.push({ x: pX, y: currentY, width: pWidth });
         currentY -= 70 + Math.random() * 50;
       }
@@ -328,11 +340,9 @@
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
       resetPlayerPosition();
-      // BGM은 사용자 상호작용 후 재생 시도
       bgm.currentTime = 0; 
       bgm.play().catch(e => {
         console.log("BGM 재생 오류 (모바일 자동 재생 정책 등):", e);
-        // 사용자에게 BGM 재생을 허용해달라는 메시지를 표시하거나, BGM 없이 진행
       });
       update();
     }
@@ -342,7 +352,7 @@
 
     function resetPlayerPosition() {
         stageTimer = 20; baby.x = originalDesignWidth / 2 - 25; baby.y = worldHeight - 80;
-        baby.dy = 0; camera.y = worldHeight - originalDesignHeight; // 카메라 위치도 originalDesignHeight 기준
+        baby.dy = 0; camera.y = worldHeight - originalDesignHeight; 
         baby.bubblesLeft = baby.maxBubbles;
     }
 
@@ -402,10 +412,8 @@
     }
 
     function draw() {
-      // clearRect는 캔버스 실제 크기 사용
       ctx.clearRect(0, 0, canvas.width, canvas.height); 
       ctx.save();
-      // translate는 스케일 적용 후 논리적 좌표로 이동
       ctx.translate(0, -camera.y); 
 
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
@@ -445,7 +453,6 @@
       if (stageTimer <= 0) { handleLoseLife(); }
       baby.x += baby.dx; baby.dy += baby.gravity; baby.y += baby.dy;
       
-      // 카메라 타겟 Y는 originalDesignHeight 기준으로 계산
       const cameraTargetY = baby.y - originalDesignHeight / 2; 
       camera.y += (cameraTargetY - camera.y) * camera.lerpFactor;
       if (camera.y < 0) camera.y = 0;
@@ -463,7 +470,6 @@
         switch(e.type) {
             case 'normal': case 'fast':
                 e.x += e.speed * e.direction;
-                // 캔버스 너비 대신 originalDesignWidth 사용
                 if(e.x < 0 || e.x + e.width > originalDesignWidth) e.direction *= -1; 
                 break;
             case 'jumper':
@@ -476,7 +482,6 @@
             handleLoseLife();
         }
       });
-      // 캔버스 너비 대신 originalDesignWidth 사용
       if (baby.x < 0) baby.x = 0;
       if (baby.x + baby.width > originalDesignWidth) baby.x = originalDesignWidth - baby.width;
       
@@ -495,10 +500,9 @@
     function setupMobileControls() {
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         if (!isMobile) {
-            document.getElementById('mobileControls').style.display = 'none'; // 모바일이 아니면 컨트롤 숨김
+            document.getElementById('mobileControls').style.display = 'none'; 
             return;
         }
-        // display는 CSS @media 쿼리에 따라 변경되므로, 여기서는 초기 display만 flex로 설정
         document.getElementById('mobileControls').style.display = 'flex'; 
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
@@ -548,12 +552,9 @@
         else { img.onload = resolve; img.onerror = reject; }
     }));
     
-    // BGM 로딩은 Promise.all에서 분리 (모바일 환경 호환성 위함)
-    // BGM 로딩이 실패해도 게임 시작 버튼은 활성화됩니다.
+    // BGM 로딩은 Promise.all에서 분리
     bgm.oncanplaythrough = () => {
         console.log("BGM 로드 완료.");
-        // BGM 로딩이 끝나면 혹시 모를 로딩 지연을 해결하기 위해 바로 재생 시도
-        // bgm.play().catch(e => console.log("BGM 첫 재생 시도 오류:", e));
     };
     bgm.onerror = (e) => {
         console.error("BGM 로드 오류:", e);
