@@ -433,7 +433,7 @@
         bgm.oncanplaythrough = resolve; bgm.onerror = reject;
     });
 
-    Promise.all([...imagePromises, audioPromise]).then(() => {
+    Promise.all(imagePromises,).then(() => {
       startButton.disabled = false; startButton.textContent = 'Start Game';
     }).catch(error => {
       startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
