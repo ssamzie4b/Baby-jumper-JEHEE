@@ -61,12 +61,9 @@
     }
 
     canvas {
-        /* background: #d0f4f7; /* 배경색은 body로 옮김 */
         display: block;
-        /* [모바일] 반응형 화면을 위한 스타일 */
         width: 100%; /* 부모 너비의 100% */
         flex-grow: 1; /* 남은 공간을 캔버스가 모두 차지하도록 함 */
-        /* height: auto; 제거, flex-grow가 높이를 조절 */
         object-fit: contain; /* 캔버스 내용이 잘리거나 왜곡되지 않고 비율을 유지하며 맞도록 */
         max-width: 800px; /* 원래 게임 디자인 너비에 맞춰 캔버스 최대 너비 설정 */
         max-height: 600px; /* (controls 제외) 원래 게임 디자인 높이에 맞춰 캔버스 최대 높이 설정 */
@@ -111,7 +108,6 @@
         bottom: auto; /* fixed 대신 relative로 변경 */
         left: auto;
         width: 100%;
-        /* height: 120px; /* 고정 높이 대신 내용에 맞게 조정 */
         flex-shrink: 0; /* 컨트롤 컨테이너가 줄어들지 않도록 함 */
         display: flex;
         justify-content: space-between;
@@ -236,11 +232,7 @@
     window.addEventListener('resize', resizeCanvasAndGame);
     window.addEventListener('orientationchange', resizeCanvasAndGame);
 
-    // 초기 로드 시 한 번 호출
-    resizeCanvasAndGame();
 
-
-    // 기존 게임 로직 (이하 동일)
     const worldHeight = originalDesignHeight * 2; // 스케일 적용 후 이 값도 필요할 수 있음
     const camera = {
       y: worldHeight - originalDesignHeight, // 초기 카메라 위치도 originalDesignHeight 기준으로
@@ -336,7 +328,12 @@
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
       resetPlayerPosition();
-      bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+      // BGM은 사용자 상호작용 후 재생 시도
+      bgm.currentTime = 0; 
+      bgm.play().catch(e => {
+        console.log("BGM 재생 오류 (모바일 자동 재생 정책 등):", e);
+        // 사용자에게 BGM 재생을 허용해달라는 메시지를 표시하거나, BGM 없이 진행
+      });
       update();
     }
     startButton.addEventListener('click', startGame);
@@ -502,7 +499,6 @@
             return;
         }
         // display는 CSS @media 쿼리에 따라 변경되므로, 여기서는 초기 display만 flex로 설정
-        // 실제 visible/hidden은 CSS에 의해 결정됨
         document.getElementById('mobileControls').style.display = 'flex'; 
         const leftBtn = document.getElementById('leftBtn');
         const rightBtn = document.getElementById('rightBtn');
@@ -530,7 +526,6 @@
             e.preventDefault(); if (gameStarted) bubbleJump();
         });
     }
-    setupMobileControls();
 
     // 키보드 입력
     document.addEventListener('keydown', e => {
@@ -552,14 +547,29 @@
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
     }));
-    const audioPromise = new Promise((resolve, reject) => {
-        bgm.oncanplaythrough = resolve; bgm.onerror = reject;
-    });
+    
+    // BGM 로딩은 Promise.all에서 분리 (모바일 환경 호환성 위함)
+    // BGM 로딩이 실패해도 게임 시작 버튼은 활성화됩니다.
+    bgm.oncanplaythrough = () => {
+        console.log("BGM 로드 완료.");
+        // BGM 로딩이 끝나면 혹시 모를 로딩 지연을 해결하기 위해 바로 재생 시도
+        // bgm.play().catch(e => console.log("BGM 첫 재생 시도 오류:", e));
+    };
+    bgm.onerror = (e) => {
+        console.error("BGM 로드 오류:", e);
+    };
 
-    Promise.all(imagePromises).then(() => { // audioPromise도 함께 기다리려면 Promise.all([ ...imagePromises, audioPromise])
-      startButton.disabled = false; startButton.textContent = 'Start Game';
+    // 이미지 리소스 로딩이 모두 완료되면 게임 시작 버튼 활성화 및 초기화 함수 호출
+    Promise.all(imagePromises).then(() => {
+      startButton.disabled = false;
+      startButton.textContent = 'Start Game';
+      
+      // 리소스 로딩이 완료된 후 캔버스 크기 조정 및 모바일 컨트롤 설정
+      resizeCanvasAndGame(); 
+      setupMobileControls();
     }).catch(error => {
-      startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
+      startButton.textContent = '에러! 새로고침 해주세요'; 
+      startButton.style.backgroundColor = 'red';
       console.error("리소스 로딩 오류:", error);
     });
   </script>
