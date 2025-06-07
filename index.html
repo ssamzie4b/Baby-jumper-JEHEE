@@ -9,7 +9,6 @@
     canvas {
         background: #d0f4f7;
         display: block;
-        /* 핵심 변경: 화면 높이에 꽉 맞추고, 너비도 최대 화면 너리까지 허용하며, 4:3 비율 유지 */
         height: 100vh; /* 뷰포트 높이에 꽉 맞춤 */
         width: auto; /* 비율에 따라 너비 자동 조절 */
         max-width: 100vw; /* 최대 너비는 뷰포트 너비로 제한 */
@@ -95,10 +94,16 @@
         z-index: 20;
         user-select: none;
     }
-    #mobileControls > div {
+    /* 좌우 이동 버튼을 감싸는 새로운 div */
+    #moveBtns {
         display: flex;
-        gap: 20px;
+        gap: 5px; /* 좌우 이동 버튼 간 간격 최소화 */
     }
+    #actionBtns {
+        display: flex;
+        gap: 20px; /* 액션 버튼 간 간격 유지 */
+    }
+
     #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn {
         width: 70px;
         height: 70px;
@@ -113,10 +118,7 @@
         border: 3px solid rgba(230, 138, 0, 0.9);
         box-shadow: 0 4px rgba(230, 138, 0, 0.9);
     }
-    #actionBtns {
-        display: flex;
-        gap: 20px;
-    }
+
 
     /* 세로 모드일 때 보여줄 알림 (기본적으로는 숨김) */
     #orientation-alert {
@@ -152,20 +154,16 @@
         display: none;
       }
       /* 가로 모드일 때 게임과 다른 UI를 표시 */
-      #gameCanvas, #uiLayer, #bubbleGauge, #mobileControls {
-        display: block !important; /* 또는 flex !important; */
+      #gameCanvas {
+        display: block;
       }
-      #uiLayer, #mobileControls {
-        display: flex !important; /* flex가 필요한 요소들은 flex로 */
+      #uiLayer, #mobileControls, #bubbleGauge {
+        display: flex; /* flex가 필요한 요소들은 flex로 */
       }
-      #bubbleGauge {
-        display: flex !important;
-      }
-
       /* 게임 시작/종료/승리 화면도 가로모드에서는 기본적으로 flex */
-      #startScreen, #winScreen, #gameOverScreen {
-        display: flex !important;
-      }
+      /* 이들은 JS에서 display 속성을 동적으로 제어하므로 !important는 피하는 것이 좋습니다. */
+      /* startScreen은 초기 상태이므로 display: flex가 되도록 합니다. */
+      /* winScreen, gameOverScreen은 초기 display: none을 유지합니다. */
     }
 
     /* 세로 모드일 때 게임 관련 UI 숨김 */
@@ -179,8 +177,10 @@
       }
     }
 
-    /* 초기 로딩 시에도 경고가 먼저 뜨지 않도록 body의 기본 display를 block으로 설정 */
-    body { display: block; }
+    /* 초기 로딩 시 startScreen만 보이도록 설정 (다른 화면은 기본적으로 숨겨짐) */
+    #startScreen { display: flex; }
+    #winScreen, #gameOverScreen { display: none; }
+    #uiLayer, #bubbleGauge, #mobileControls, #gameCanvas { display: none; } /* 게임 시작 전에는 모두 숨김 */
   </style>
 </head>
 <body>
@@ -191,14 +191,14 @@
     <button id="startButton" disabled>게임 로딩중...</button>
   </div>
 
-  <div id="winScreen" style="display: none;">
+  <div id="winScreen">
     <h1>CONGRATULATIONS!</h1>
     <p>모든 스테이지를 클리어했습니다!</p>
     <div id="rankingList" class="rankingList"></div>
     <button id="restartButton">Play Again</button>
   </div>
 
-  <div id="gameOverScreen" style="display: none;">
+  <div id="gameOverScreen">
     <h1>GAME OVER</h1>
     <div id="rankingListGO" class="rankingList"></div>
     <button id="restartButtonGO">Try Again</button>
@@ -219,9 +219,10 @@
   <canvas id="gameCanvas"></canvas>
   <audio id="bgm" src="./bgm.mp3" loop></audio>
 
-  <div id="mobileControls" style="display: none;">
-    <div id="leftBtn">←</div>
-    <div id="rightBtn">→</div>
+  <div id="mobileControls">
+    <div id="moveBtns"> <div id="leftBtn">←</div>
+      <div id="rightBtn">→</div>
+    </div>
     <div id="actionBtns">
       <div id="bubbleJumpBtn">BUBBLE</div>
       <div id="jumpBtn">JUMP</div>
@@ -229,7 +230,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My4yNjMtLjU0Ni4zMjYtLjgz.zI2cy0uNTYyLjA2My0uODI0LjMyNWwtMjQuNjEgMjQuNjM0Yy0uMzc1LjM3NS0uOTU1LjQzNy0xLjM3MS4yMDVsLS4yMTktLjA5NWMtLjQ4OC0uMjg0LS43NDUtLjgyNC0uNDg0LTEuMzdsMjAuNTctMjAuMTg0Yy45Ni0.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My4yNjMtLjU0Ni4zMjYtLjgz.zI2cy0uNTYyLjA2My0uODI0LjMyNWwtMjQuNjEgMjQuNjM0Yy0uMzc1LjM3NS0uOTU1LjQzNy0xLjM3MS4yMDVsLS4yMTktLjA5NWMtLjQ4OC0uMjg0LS43NDUtLjgyNC0uNDg0LTEuMzdsMjAuNTctMjAuMTg0Yy45Ni0.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
     <p>가로 모드로 전환해 주세요.</p>
     <p>(Please switch to landscape mode)</p>
   </div>
@@ -293,35 +294,48 @@
     const rankingListGO = document.getElementById('rankingListGO');
     const orientationAlert = document.getElementById('orientation-alert');
 
-    // 방향 확인 함수
+    // 방향 확인 및 화면 표시 관리 함수
     function checkOrientation() {
         if (window.innerWidth < window.innerHeight) { /* 세로 모드일 때 */
-            // 세로 모드일 때 모든 게임 관련 화면을 숨기고 경고 표시
-            document.querySelectorAll('#gameCanvas, #uiLayer, #bubbleGauge, #mobileControls, #startScreen, #winScreen, #gameOverScreen').forEach(el => {
-                el.style.display = 'none';
-            });
+            // 모든 게임 관련 화면을 숨기고 경고 표시
+            document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('uiLayer').style.display = 'none';
+            document.getElementById('bubbleGauge').style.display = 'none';
+            document.getElementById('mobileControls').style.display = 'none';
+            startScreen.style.display = 'none';
+            winScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+
             orientationAlert.style.display = 'flex';
             gameStarted = false; // 게임 일시 정지
             bgm.pause(); // BGM도 일시 정지
         } else { /* 가로 모드일 때 */
-            // 가로 모드일 때 경고를 숨기고 필요한 화면 표시
             orientationAlert.style.display = 'none';
-            // 게임 시작 화면이 아니라면 게임 관련 UI를 다시 보이게 함
-            if (startScreen.style.display === 'none' && winScreen.style.display === 'none' && gameOverScreen.style.display === 'none') {
+
+            // 현재 게임 상태에 따라 적절한 화면을 표시
+            if (gameStarted) { // 게임이 이미 시작된 상태
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
                 document.getElementById('bubbleGauge').style.display = 'flex';
                 setupMobileControls(); // 모바일 컨트롤러 다시 설정
-                if (gameStarted) {
-                    update(); // 게임이 이미 시작되었던 상태라면 다시 시작
-                    bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+                update(); // 게임 루프 재개
+                bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+                // 다른 종료/승리 화면은 숨김
+                winScreen.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+            } else { // 게임이 시작되지 않은 상태 (시작, 승리, 패배 화면 중 하나)
+                document.getElementById('gameCanvas').style.display = 'none';
+                document.getElementById('uiLayer').style.display = 'none';
+                document.getElementById('bubbleGauge').style.display = 'none';
+                document.getElementById('mobileControls').style.display = 'none'; // 컨트롤러 숨김
+
+                if (gameOverScreen.style.display !== 'none') { // 게임 오버 화면이 떠있었다면
+                    gameOverScreen.style.display = 'flex';
+                } else if (winScreen.style.display !== 'none') { // 승리 화면이 떠있었다면
+                    winScreen.style.display = 'flex';
+                } else { // 기본은 시작 화면
+                    startScreen.style.display = 'flex';
                 }
-            } else if (startScreen.style.display !== 'none') { // 시작 화면이 보이고 있는 경우
-                startScreen.style.display = 'flex';
-            } else if (winScreen.style.display !== 'none') { // 승리 화면이 보이고 있는 경우
-                winScreen.style.display = 'flex';
-            } else if (gameOverScreen.style.display !== 'none') { // 게임 오버 화면이 보이고 있는 경우
-                gameOverScreen.style.display = 'flex';
             }
         }
     }
@@ -367,9 +381,15 @@
     }
 
     function startGame() {
+      // 게임 시작 시 모든 오버레이 숨기고 게임 화면 표시
       startScreen.style.display = 'none';
       winScreen.style.display = 'none';
       gameOverScreen.style.display = 'none';
+      document.getElementById('gameCanvas').style.display = 'block';
+      document.getElementById('uiLayer').style.display = 'flex';
+      document.getElementById('bubbleGauge').style.display = 'flex';
+      setupMobileControls(); // 모바일 컨트롤러도 표시
+
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
       resetPlayerPosition();
@@ -410,6 +430,12 @@
     function showGameOver() {
         gameStarted = false;
         bgm.pause();
+        // 게임 화면 및 UI 숨김
+        document.getElementById('gameCanvas').style.display = 'none';
+        document.getElementById('uiLayer').style.display = 'none';
+        document.getElementById('bubbleGauge').style.display = 'none';
+        document.getElementById('mobileControls').style.display = 'none';
+
         const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
         updateAndShowRanking(playerName || "Guest", rankingListGO);
         gameOverScreen.style.display = 'flex';
@@ -429,6 +455,12 @@
     function showWinScreen() {
         gameStarted = false;
         bgm.pause();
+        // 게임 화면 및 UI 숨김
+        document.getElementById('gameCanvas').style.display = 'none';
+        document.getElementById('uiLayer').style.display = 'none';
+        document.getElementById('bubbleGauge').style.display = 'none';
+        document.getElementById('mobileControls').style.display = 'none';
+
         const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
         updateAndShowRanking(playerName || "Guest", rankingList);
         winScreen.style.display = 'flex';
@@ -477,7 +509,6 @@
     }
 
     function update(time = 0) {
-      // 가로 모드일 때만 업데이트 실행
       if (!gameStarted || window.innerWidth < window.innerHeight) return;
       deltaTime = (time - lastTime) / 1000; lastTime = time;
       stageTimer -= deltaTime;
@@ -488,7 +519,6 @@
       if (camera.y < 0) camera.y = 0;
       if (camera.y > worldHeight - canvas.height) { camera.y = worldHeight - canvas.height; }
 
-      // 아기가 화면 밖으로 나가지 않도록 가로 경계 제한
       if (baby.x < 0) baby.x = 0;
       if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
 
@@ -533,14 +563,14 @@
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const mobileControlsDiv = document.getElementById('mobileControls');
         if (!isMobile) {
-            mobileControlsDiv.style.display = 'none'; // 모바일이 아니면 숨김
+            mobileControlsDiv.style.display = 'none';
             return;
         }
-        // 세로 모드일 때는 숨김
+        // 가로 모드일 때만 표시
         if (window.innerWidth < window.innerHeight) {
             mobileControlsDiv.style.display = 'none';
         } else {
-            mobileControlsDiv.style.display = 'flex'; // 가로 모드일 때만 표시
+            mobileControlsDiv.style.display = 'flex';
         }
 
         const leftBtn = document.getElementById('leftBtn');
@@ -548,7 +578,6 @@
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
 
-        // 기존 이벤트 리스너 제거 (중복 등록 방지)
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
         leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
         rightBtn.removeEventListener('touchstart', handleRightTouchStart);
@@ -556,7 +585,6 @@
         jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
         bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
 
-        // 새로운 (또는 다시) 이벤트 리스너 등록
         leftBtn.addEventListener('touchstart', handleLeftTouchStart);
         leftBtn.addEventListener('touchend', handleLeftTouchEnd);
         rightBtn.addEventListener('touchstart', handleRightTouchStart);
@@ -565,7 +593,6 @@
         bubbleJumpBtn.addEventListener('touchstart', handleBubbleJumpTouchStart);
     }
 
-    // 터치 이벤트 핸들러 함수를 분리하여 remove/add 가능하게 함
     function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = -baby.speed; }
     function handleLeftTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
     function handleRightTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = baby.speed; }
@@ -574,9 +601,8 @@
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
 
 
-    setupMobileControls(); // 초기 호출
+    setupMobileControls();
 
-    // 키보드 입력 (세로 모드일 때는 작동하지 않도록 추가 조건)
     document.addEventListener('keydown', e => {
       if (!gameStarted || window.innerWidth < window.innerHeight) return;
       if (e.key === 'ArrowRight') baby.dx = baby.speed;
@@ -590,7 +616,6 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    // 게임 리소스 로딩
     const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
@@ -607,7 +632,6 @@
       startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
     });
 
-    // 페이지 로드 시 초기 방향 체크
     window.addEventListener('load', checkOrientation);
 
   </script>
