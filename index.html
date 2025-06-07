@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Jumper "Jehee" - Final Version</title>
   <style>
-    body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; }
+    body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; /* 배경색 추가로 캔버스 여백 확인 */ }
     canvas {
         background: #d0f4f7;
         display: block;
-        width: auto; /* 높이에 맞게 너비 자동 조절 */
-        height: 100vh; /* 뷰포트 높이에 꽉 맞춤 */
+        /* 핵심 변경: 화면 너비에 꽉 맞추고, 높이도 최대 화면 높이까지 허용하며, 4:3 비율 유지 */
+        width: 100vw; /* 뷰포트 너비에 꽉 맞춤 */
+        height: auto; /* 비율에 따라 높이 자동 조절 */
+        max-height: 100vh; /* 최대 높이는 뷰포트 높이로 제한 */
+        aspect-ratio: 4 / 3; /* 내부 게임 해상도(800x600)의 비율을 유지 */
         margin: 0 auto; /* 중앙 정렬 */
     }
     #uiLayer {
@@ -204,7 +207,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS41MjQtLjQ4Ny0uOTYtMS4wMDkt.OTYtLjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
     <p>세로 모드로 전환해 주세요.</p>
     <p>(Please switch to portrait mode)</p>
   </div>
@@ -266,7 +269,7 @@
     const timerDisplay = document.getElementById('timerDisplay');
     const rankingList = document.getElementById('rankingList');
     const rankingListGO = document.getElementById('rankingListGO');
-    const orientationAlert = document.getElementById('orientation-alert'); // 새로 추가된 요소
+    const orientationAlert = document.getElementById('orientation-alert');
 
     // 방향 확인 함수
     function checkOrientation() {
@@ -281,19 +284,20 @@
             // 세로 모드일 때 경고를 숨기고 필요한 화면 표시
             orientationAlert.style.display = 'none';
             // 게임 시작 화면이 아니면 게임 관련 UI를 다시 보이게 함
-            if (!startScreen.style.display && !winScreen.style.display && !gameOverScreen.style.display) {
+            // startScreen.style.display가 "none"이 아니라면 (즉, 화면에 보인다면) display:flex로 설정
+            // 그 외의 경우 (게임 중이거나 승리/패배 화면)
+            if (startScreen.style.display === 'none' && winScreen.style.display === 'none' && gameOverScreen.style.display === 'none') {
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
                 document.getElementById('bubbleGauge').style.display = 'flex';
-                // 모바일 컨트롤러는 setupMobileControls()에서 처리하므로 여기서 display:flex로 설정하지 않음
                 setupMobileControls(); // 모바일 컨트롤러 다시 설정
-            } else {
-                // 게임 시작/종료/승리 화면은 조건에 따라 display 설정
-                if (startScreen.style.display === 'none' && winScreen.style.display === 'none' && gameOverScreen.style.display === 'none') {
-                    // 게임이 이미 시작되었던 상태라면 (또는 준비된 상태) 다시 시작 화면을 보여줄 필요는 없을 것 같음
-                    // 여기서 다시 update()를 호출하여 게임을 재개할 수 있습니다.
-                    if (gameStarted) update();
-                }
+                if (gameStarted) update(); // 게임이 이미 시작되었던 상태라면 다시 시작
+            } else if (startScreen.style.display !== 'none') { // 시작 화면이 보이고 있는 경우
+                startScreen.style.display = 'flex';
+            } else if (winScreen.style.display !== 'none') { // 승리 화면이 보이고 있는 경우
+                winScreen.style.display = 'flex';
+            } else if (gameOverScreen.style.display !== 'none') { // 게임 오버 화면이 보이고 있는 경우
+                gameOverScreen.style.display = 'flex';
             }
         }
     }
@@ -416,7 +420,7 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.translate(0, -camera.y);
+      ctx.translate(0, -camera.y); /* 여전히 Y축으로만 카메라 이동 */
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
       ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)';
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
@@ -449,7 +453,7 @@
     }
 
     function update(time = 0) {
-      if (!gameStarted) return; // 게임이 시작되지 않았거나 가로 모드일 때 중단
+      if (!gameStarted || window.innerWidth > window.innerHeight) return; // 게임이 시작되지 않았거나 가로 모드일 때 중단
       deltaTime = (time - lastTime) / 1000; lastTime = time;
       stageTimer -= deltaTime;
       if (stageTimer <= 0) { handleLoseLife(); }
@@ -458,6 +462,11 @@
       camera.y += (cameraTargetY - camera.y) * camera.lerpFactor;
       if (camera.y < 0) camera.y = 0;
       if (camera.y > worldHeight - canvas.height) { camera.y = worldHeight - canvas.height; }
+
+      // 아기가 화면 밖으로 나가지 않도록 가로 경계 제한
+      if (baby.x < 0) baby.x = 0;
+      if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
+
       if (baby.dy > 0) {
         platforms.forEach(p => {
           if (baby.x + baby.width > p.x && baby.x < p.x + p.width &&
@@ -482,8 +491,7 @@
             handleLoseLife();
         }
       });
-      if (baby.x < 0) baby.x = 0;
-      if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
+
       if (baby.y > worldHeight) { handleLoseLife(); }
       if (baby.y + baby.height < 0) { baby.y = -baby.height; baby.dy = 1; }
       if (baby.x < goal.x + goal.width && baby.x + baby.width > goal.x &&
@@ -514,28 +522,33 @@
         const rightBtn = document.getElementById('rightBtn');
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
-        leftBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = -baby.speed;
-        });
-        leftBtn.addEventListener('touchend', (e) => {
-            e.preventDefault(); if (gameStarted) baby.dx = 0;
-        });
-        rightBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = baby.speed;
-        });
-        rightBtn.addEventListener('touchend', (e) => {
-            e.preventDefault(); if (gameStarted) baby.dx = 0;
-        });
-        jumpBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (gameStarted && !baby.isJumping && window.innerWidth < window.innerHeight) {
-                baby.dy = baby.jumpPower; baby.isJumping = true;
-            }
-        });
-        bubbleJumpBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) bubbleJump();
-        });
+
+        // 기존 이벤트 리스너 제거 (중복 등록 방지)
+        leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
+        leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
+        rightBtn.removeEventListener('touchstart', handleRightTouchStart);
+        rightBtn.removeEventListener('touchend', handleRightTouchEnd);
+        jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
+        bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
+
+        // 새로운 (또는 다시) 이벤트 리스너 등록
+        leftBtn.addEventListener('touchstart', handleLeftTouchStart);
+        leftBtn.addEventListener('touchend', handleLeftTouchEnd);
+        rightBtn.addEventListener('touchstart', handleRightTouchStart);
+        rightBtn.addEventListener('touchend', handleRightTouchEnd);
+        jumpBtn.addEventListener('touchstart', handleJumpTouchStart);
+        bubbleJumpBtn.addEventListener('touchstart', handleBubbleJumpTouchStart);
     }
+
+    // 터치 이벤트 핸들러 함수를 분리하여 remove/add 가능하게 함
+    function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = -baby.speed; }
+    function handleLeftTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
+    function handleRightTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = baby.speed; }
+    function handleRightTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
+    function handleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && !baby.isJumping && window.innerWidth < window.innerHeight) { baby.dy = baby.jumpPower; baby.isJumping = true; } }
+    function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) bubbleJump(); }
+
+
     setupMobileControls(); // 초기 호출
 
     // 키보드 입력 (가로 모드일 때는 작동하지 않도록 추가 조건)
