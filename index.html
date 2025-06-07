@@ -32,10 +32,10 @@
       font-weight: bold;
       pointer-events: none;
       z-index: 15; /* 게임 화면 위에 오도록 */
-      background-color: rgba(255, 255, 255, 0.7); /* 배경 추가 */
+      background-color: transparent; /* 배경 제거 */
       padding: 10px 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border-radius: 10px; /* 배경이 없으므로 큰 의미는 없지만 유지 */
+      box-shadow: none; /* 그림자 제거 */
     }
     #leftUI, #rightUI {
         display: flex;
@@ -47,10 +47,9 @@
         display: flex;
         gap: 5px;
         align-items: center;
-        /* 기존 fixed, bottom, left, transform 제거 */
-        z-index: 15; /* uiLayer와 동일한 z-index 또는 더 높은 값 */
-        background-color: transparent; /* uiLayer 배경색을 사용하므로 투명하게 */
-        padding: 0; /* uiLayer의 패딩을 사용하므로 0 */
+        z-index: 15;
+        background-color: transparent; /* 배경 제거 */
+        padding: 0; /* 패딩 제거 */
         box-shadow: none; /* 그림자 제거 */
     }
 
@@ -161,7 +160,6 @@
       #uiLayer, #mobileControls {
         display: flex; /* flex가 필요한 요소들은 flex로 */
       }
-      /* #bubbleGauge는 uiLayer 안에 있으므로 따로 display:flex를 지정할 필요 없음 */
     }
 
     /* 세로 모드일 때 게임 관련 UI 숨김 */
@@ -228,7 +226,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS.1MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjYwMy0uMDQzLjYwMy0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS41MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
     <p>가로 모드로 전환해 주세요.</p>
     <p>(Please switch to landscape mode)</p>
   </div>
