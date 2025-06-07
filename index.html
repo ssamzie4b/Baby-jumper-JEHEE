@@ -42,21 +42,18 @@
         gap: 20px; /* 요소 간 간격 추가 */
         align-items: center;
     }
-
+    /* Bubble Gauge를 uiLayer 안에 배치하면서 스타일 조정 */
     #bubbleGauge {
-        position: fixed; /* 하단 중앙으로 고정 */
-        bottom: 140px; /* 모바일 컨트롤러 위에 위치 (조정 필요할 수 있음) */
-        left: 50%;
-        transform: translateX(-50%);
         display: flex;
         gap: 5px;
         align-items: center;
-        z-index: 20; /* 다른 UI 요소보다 위에 오도록 */
-        background-color: rgba(255, 255, 255, 0.7); /* 배경 추가 */
-        padding: 8px 15px;
-        border-radius: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        /* 기존 fixed, bottom, left, transform 제거 */
+        z-index: 15; /* uiLayer와 동일한 z-index 또는 더 높은 값 */
+        background-color: transparent; /* uiLayer 배경색을 사용하므로 투명하게 */
+        padding: 0; /* uiLayer의 패딩을 사용하므로 0 */
+        box-shadow: none; /* 그림자 제거 */
     }
+
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
     .bubble-icon.empty { opacity: 0.2; }
 
@@ -161,9 +158,10 @@
       #gameCanvas {
         display: block;
       }
-      #uiLayer, #mobileControls, #bubbleGauge {
+      #uiLayer, #mobileControls {
         display: flex; /* flex가 필요한 요소들은 flex로 */
       }
+      /* #bubbleGauge는 uiLayer 안에 있으므로 따로 display:flex를 지정할 필요 없음 */
     }
 
     /* 세로 모드일 때 게임 관련 UI 숨김 */
@@ -209,12 +207,12 @@
       <div id="stageDisplay">Stage 1</div>
       <div id="score">Score: 0</div>
     </div>
+    <div id="bubbleGauge"></div>
     <div id="rightUI">
       <div id="livesDisplay">❤️ 3</div>
       <div id="timerDisplay">⏰ 20</div>
     </div>
   </div>
-  <div id="bubbleGauge"></div>
 
   <canvas id="gameCanvas"></canvas>
   <audio id="bgm" src="./bgm.mp3" loop></audio>
@@ -230,7 +228,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS41MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS.1MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
     <p>가로 모드로 전환해 주세요.</p>
     <p>(Please switch to landscape mode)</p>
   </div>
@@ -315,7 +313,7 @@
             // 모든 게임 관련 화면을 숨기고 경고 표시
             document.getElementById('gameCanvas').style.display = 'none';
             document.getElementById('uiLayer').style.display = 'none';
-            document.getElementById('bubbleGauge').style.display = 'none';
+            document.getElementById('bubbleGauge').style.display = 'none'; // uiLayer 안에 있지만 명시적으로 숨김
             document.getElementById('mobileControls').style.display = 'none';
             startScreen.style.display = 'none';
             winScreen.style.display = 'none';
@@ -331,7 +329,7 @@
             if (gameStarted) { // 게임이 이미 시작된 상태
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
-                document.getElementById('bubbleGauge').style.display = 'flex';
+                document.getElementById('bubbleGauge').style.display = 'flex'; // uiLayer 안에 있으므로 flex
                 setupMobileControls(); // 모바일 컨트롤러도 표시
                 update(); // 게임 루프 재개
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
@@ -341,7 +339,7 @@
             } else { // 게임이 시작되지 않은 상태 (시작, 승리, 패배 화면 중 하나)
                 document.getElementById('gameCanvas').style.display = 'none';
                 document.getElementById('uiLayer').style.display = 'none';
-                document.getElementById('bubbleGauge').style.display = 'none';
+                document.getElementById('bubbleGauge').style.display = 'none'; // uiLayer 안에 있으므로 명시적으로 숨김
                 document.getElementById('mobileControls').style.display = 'none'; // 컨트롤러 숨김
 
                 if (gameOverScreen.style.display !== 'none') { // 게임 오버 화면이 떠있었다면
