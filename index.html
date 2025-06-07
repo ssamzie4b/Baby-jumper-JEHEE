@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Jumper "Jehee" - Final Version</title>
+
+  <link rel="manifest" href="./manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
     body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; }
     canvas {
@@ -160,10 +164,6 @@
       #uiLayer, #mobileControls, #bubbleGauge {
         display: flex; /* flex가 필요한 요소들은 flex로 */
       }
-      /* 게임 시작/종료/승리 화면도 가로모드에서는 기본적으로 flex */
-      /* 이들은 JS에서 display 속성을 동적으로 제어하므로 !important는 피하는 것이 좋습니다. */
-      /* startScreen은 초기 상태이므로 display: flex가 되도록 합니다. */
-      /* winScreen, gameOverScreen은 초기 display: none을 유지합니다. */
     }
 
     /* 세로 모드일 때 게임 관련 UI 숨김 */
@@ -230,7 +230,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My4yNjMtLjU0Ni4zMjYtLjgz.zI2cy0uNTYyLjA2My0uODI0LjMyNWwtMjQuNjEgMjQuNjM0Yy0uMzc1LjM3NS0uOTU1LjQzNy0xLjM3MS4yMDVsLS4yMTktLjA5NWMtLjQ4OC0uMjg0LS43NDUtLjgyNC0uNDg0LTEuMzdsMjAuNTctMjAuMTg0Yy45Ni0.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS41MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
     <p>가로 모드로 전환해 주세요.</p>
     <p>(Please switch to landscape mode)</p>
   </div>
@@ -294,6 +294,21 @@
     const rankingListGO = document.getElementById('rankingListGO');
     const orientationAlert = document.getElementById('orientation-alert');
 
+    // Fullscreen API를 시도하는 함수 (사용자 제스처 필요)
+    function enterFullscreen() {
+        const elem = document.documentElement; // 문서 전체를 전체 화면으로 시도
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.mozRequestFullScreen) { /* Firefox */
+            elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { /* IE/Edge */
+            elem.msRequestFullscreen();
+        }
+    }
+
+
     // 방향 확인 및 화면 표시 관리 함수
     function checkOrientation() {
         if (window.innerWidth < window.innerHeight) { /* 세로 모드일 때 */
@@ -317,7 +332,7 @@
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
                 document.getElementById('bubbleGauge').style.display = 'flex';
-                setupMobileControls(); // 모바일 컨트롤러 다시 설정
+                setupMobileControls(); // 모바일 컨트롤러도 표시
                 update(); // 게임 루프 재개
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
                 // 다른 종료/승리 화면은 숨김
@@ -395,6 +410,10 @@
       resetPlayerPosition();
       bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
       update();
+
+      // 게임 시작 버튼 클릭 시 전체 화면 모드 진입 시도
+      // 이 부분은 사용자 제스처(클릭) 내에서 호출되므로 작동할 가능성이 높습니다.
+      enterFullscreen();
     }
     startButton.addEventListener('click', startGame);
     restartButton.addEventListener('click', startGame);
