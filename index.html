@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Jumper "Jehee" - Final Version</title>
   <style>
-    body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; /* 배경색 추가로 캔버스 여백 확인 */ }
+    body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: #f0f0f0; }
     canvas {
         background: #d0f4f7;
         display: block;
-        /* 핵심 변경: 화면 너비에 꽉 맞추고, 높이도 최대 화면 높이까지 허용하며, 4:3 비율 유지 */
-        width: 100vw; /* 뷰포트 너비에 꽉 맞춤 */
-        height: auto; /* 비율에 따라 높이 자동 조절 */
-        max-height: 100vh; /* 최대 높이는 뷰포트 높이로 제한 */
+        /* 핵심 변경: 화면 높이에 꽉 맞추고, 너비도 최대 화면 너리까지 허용하며, 4:3 비율 유지 */
+        height: 100vh; /* 뷰포트 높이에 꽉 맞춤 */
+        width: auto; /* 비율에 따라 너비 자동 조절 */
+        max-width: 100vw; /* 최대 너비는 뷰포트 너비로 제한 */
         aspect-ratio: 4 / 3; /* 내부 게임 해상도(800x600)의 비율을 유지 */
         margin: 0 auto; /* 중앙 정렬 */
     }
@@ -42,7 +42,7 @@
 
     #bubbleGauge {
         position: fixed; /* 하단 중앙으로 고정 */
-        bottom: 140px; /* 모바일 컨트롤러 위에 위치 */
+        bottom: 140px; /* 모바일 컨트롤러 위에 위치 (조정 필요할 수 있음) */
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -85,8 +85,8 @@
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100%;
-        height: 120px;
+        width: 100%; /* 가로모드에서는 100vw가 될 것임 */
+        height: 120px; /* 높이 고정 (조정 필요할 수 있음) */
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -118,9 +118,9 @@
         gap: 20px;
     }
 
-    /* 가로 모드일 때 보여줄 알림 */
+    /* 세로 모드일 때 보여줄 알림 (기본적으로는 숨김) */
     #orientation-alert {
-      display: none; /* 기본적으로 숨김 */
+      display: flex; /* 기본적으로 표시하도록 설정, 가로 모드일 때만 숨김 */
       position: fixed;
       top: 0;
       left: 0;
@@ -130,7 +130,6 @@
       color: white;
       font-size: 28px;
       text-align: center;
-      display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -143,17 +142,40 @@
         width: 80px; /* 회전 아이콘 크기 */
         height: 80px;
         margin-bottom: 20px;
+        /* 가로 모드 아이콘으로 변경 */
+        transform: rotate(90deg);
     }
 
-    /* 가로 모드일 때만 #orientation-alert를 표시 */
+    /* 가로 모드일 때 #orientation-alert를 숨김 */
     @media screen and (orientation: landscape) {
       #orientation-alert {
-        display: flex;
+        display: none;
       }
-      /* 가로 모드일 때 게임과 다른 UI를 숨김 */
+      /* 가로 모드일 때 게임과 다른 UI를 표시 */
+      #gameCanvas, #uiLayer, #bubbleGauge, #mobileControls {
+        display: block !important; /* 또는 flex !important; */
+      }
+      #uiLayer, #mobileControls {
+        display: flex !important; /* flex가 필요한 요소들은 flex로 */
+      }
+      #bubbleGauge {
+        display: flex !important;
+      }
+
+      /* 게임 시작/종료/승리 화면도 가로모드에서는 기본적으로 flex */
+      #startScreen, #winScreen, #gameOverScreen {
+        display: flex !important;
+      }
+    }
+
+    /* 세로 모드일 때 게임 관련 UI 숨김 */
+    @media screen and (orientation: portrait) {
       #gameCanvas, #uiLayer, #bubbleGauge, #mobileControls,
       #startScreen, #winScreen, #gameOverScreen {
         display: none !important;
+      }
+      #orientation-alert {
+        display: flex; /* 세로 모드일 때 알림 표시 */
       }
     }
 
@@ -207,9 +229,9 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
-    <p>세로 모드로 전환해 주세요.</p>
-    <p>(Please switch to portrait mode)</p>
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkxNGMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzFtLS41ODMgMTcuNzk2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi4xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjk2LjA0My45Ni0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My4yNjMtLjU0Ni4zMjYtLjgz.zI2cy0uNTYyLjA2My0uODI0LjMyNWwtMjQuNjEgMjQuNjM0Yy0uMzc1LjM3NS0uOTU1LjQzNy0xLjM3MS4yMDVsLS4yMTktLjA5NWMtLjQ4OC0uMjg0LS43NDUtLjgyNC0uNDg0LTEuMzdsMjAuNTctMjAuMTg0Yy45Ni0.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy4yMTdjLS41MjItLjQzNC0xLjIyMi0uNjkxLTEuNDExLTEuMTIzbC0uNjUtLjczMi0xLjQ5OC0xLjY5OS0xNy45Mi0yMC42NTJjLS4wOTUtLjE1NS0uMTU2LS4yNjEtLjE1Ni0uNDE3di0uNTNjLS4wNjMtLjUyNC0uNDg3LS45Ni0xLjAwOS0.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <p>가로 모드로 전환해 주세요.</p>
+    <p>(Please switch to landscape mode)</p>
   </div>
 
 
@@ -273,25 +295,27 @@
 
     // 방향 확인 함수
     function checkOrientation() {
-        if (window.innerWidth > window.innerHeight) {
-            // 가로 모드일 때 모든 게임 관련 화면을 숨기고 경고 표시
+        if (window.innerWidth < window.innerHeight) { /* 세로 모드일 때 */
+            // 세로 모드일 때 모든 게임 관련 화면을 숨기고 경고 표시
             document.querySelectorAll('#gameCanvas, #uiLayer, #bubbleGauge, #mobileControls, #startScreen, #winScreen, #gameOverScreen').forEach(el => {
                 el.style.display = 'none';
             });
             orientationAlert.style.display = 'flex';
             gameStarted = false; // 게임 일시 정지
-        } else {
-            // 세로 모드일 때 경고를 숨기고 필요한 화면 표시
+            bgm.pause(); // BGM도 일시 정지
+        } else { /* 가로 모드일 때 */
+            // 가로 모드일 때 경고를 숨기고 필요한 화면 표시
             orientationAlert.style.display = 'none';
-            // 게임 시작 화면이 아니면 게임 관련 UI를 다시 보이게 함
-            // startScreen.style.display가 "none"이 아니라면 (즉, 화면에 보인다면) display:flex로 설정
-            // 그 외의 경우 (게임 중이거나 승리/패배 화면)
+            // 게임 시작 화면이 아니라면 게임 관련 UI를 다시 보이게 함
             if (startScreen.style.display === 'none' && winScreen.style.display === 'none' && gameOverScreen.style.display === 'none') {
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
                 document.getElementById('bubbleGauge').style.display = 'flex';
                 setupMobileControls(); // 모바일 컨트롤러 다시 설정
-                if (gameStarted) update(); // 게임이 이미 시작되었던 상태라면 다시 시작
+                if (gameStarted) {
+                    update(); // 게임이 이미 시작되었던 상태라면 다시 시작
+                    bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+                }
             } else if (startScreen.style.display !== 'none') { // 시작 화면이 보이고 있는 경우
                 startScreen.style.display = 'flex';
             } else if (winScreen.style.display !== 'none') { // 승리 화면이 보이고 있는 경우
@@ -420,7 +444,7 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.translate(0, -camera.y); /* 여전히 Y축으로만 카메라 이동 */
+      ctx.translate(0, -camera.y);
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
       ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)';
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
@@ -453,7 +477,8 @@
     }
 
     function update(time = 0) {
-      if (!gameStarted || window.innerWidth > window.innerHeight) return; // 게임이 시작되지 않았거나 가로 모드일 때 중단
+      // 가로 모드일 때만 업데이트 실행
+      if (!gameStarted || window.innerWidth < window.innerHeight) return;
       deltaTime = (time - lastTime) / 1000; lastTime = time;
       stageTimer -= deltaTime;
       if (stageTimer <= 0) { handleLoseLife(); }
@@ -511,11 +536,11 @@
             mobileControlsDiv.style.display = 'none'; // 모바일이 아니면 숨김
             return;
         }
-        // 가로 모드일 때는 숨김 (CSS에서 이미 처리하지만, JS에서도 안전하게)
-        if (window.innerWidth > window.innerHeight) {
+        // 세로 모드일 때는 숨김
+        if (window.innerWidth < window.innerHeight) {
             mobileControlsDiv.style.display = 'none';
         } else {
-            mobileControlsDiv.style.display = 'flex'; // 세로 모드일 때만 표시
+            mobileControlsDiv.style.display = 'flex'; // 가로 모드일 때만 표시
         }
 
         const leftBtn = document.getElementById('leftBtn');
@@ -541,19 +566,19 @@
     }
 
     // 터치 이벤트 핸들러 함수를 분리하여 remove/add 가능하게 함
-    function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = -baby.speed; }
+    function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = -baby.speed; }
     function handleLeftTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
-    function handleRightTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) baby.dx = baby.speed; }
+    function handleRightTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = baby.speed; }
     function handleRightTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
-    function handleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && !baby.isJumping && window.innerWidth < window.innerHeight) { baby.dy = baby.jumpPower; baby.isJumping = true; } }
-    function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth < window.innerHeight) bubbleJump(); }
+    function handleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && !baby.isJumping && window.innerWidth > window.innerHeight) { baby.dy = baby.jumpPower; baby.isJumping = true; } }
+    function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
 
 
     setupMobileControls(); // 초기 호출
 
-    // 키보드 입력 (가로 모드일 때는 작동하지 않도록 추가 조건)
+    // 키보드 입력 (세로 모드일 때는 작동하지 않도록 추가 조건)
     document.addEventListener('keydown', e => {
-      if (!gameStarted || window.innerWidth > window.innerHeight) return;
+      if (!gameStarted || window.innerWidth < window.innerHeight) return;
       if (e.key === 'ArrowRight') baby.dx = baby.speed;
       if (e.key === 'ArrowLeft') baby.dx = -baby.speed;
       if ((e.key === 'a' || e.key === 'ㅁ') && !baby.isJumping) {
