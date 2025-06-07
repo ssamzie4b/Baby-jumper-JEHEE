@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-M-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Jumper "Jehee" - Final Version</title>
 
@@ -26,7 +26,7 @@
       right: 10px; /* 가로 전체를 차지 */
       display: flex;
       justify-content: space-between; /* 양쪽 끝으로 정렬 */
-      align-items: center; /* 세로 중앙 정렬 */
+      align-items: flex-start; /* 상단 정렬 (아이템들이 위에서부터 쌓이도록) */
       color: #0b3c5d;
       font-size: 24px;
       font-weight: bold;
@@ -34,15 +34,22 @@
       z-index: 15; /* 게임 화면 위에 오도록 */
       background-color: transparent; /* 배경 제거 */
       padding: 10px 20px;
-      border-radius: 10px; /* 배경이 없으므로 큰 의미는 없지만 유지 */
+      border-radius: 10px;
       box-shadow: none; /* 그림자 제거 */
     }
-    #leftUI, #rightUI {
+    #leftUI {
         display: flex;
-        gap: 20px; /* 요소 간 간격 추가 */
-        align-items: center;
+        flex-direction: column; /* 세로로 쌓이도록 변경 */
+        gap: 5px; /* Stage와 Score 간격 */
+        align-items: flex-start; /* 왼쪽 정렬 */
     }
-    /* Bubble Gauge를 uiLayer 안에 배치하면서 스타일 조정 */
+    #rightUI {
+        display: flex;
+        flex-direction: column; /* 세로로 쌓이도록 변경 */
+        gap: 5px; /* 목숨, 시간, 버블 갯수 간격 */
+        align-items: flex-end; /* 오른쪽 정렬 */
+    }
+    /* Bubble Gauge를 rightUI 안에 배치하면서 스타일 조정 */
     #bubbleGauge {
         display: flex;
         gap: 5px;
@@ -51,6 +58,7 @@
         background-color: transparent; /* 배경 제거 */
         padding: 0; /* 패딩 제거 */
         box-shadow: none; /* 그림자 제거 */
+        margin-top: 10px; /* 시간 아래로 약간의 간격 */
     }
 
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
@@ -84,8 +92,8 @@
         position: fixed;
         bottom: 0;
         left: 0;
-        width: 100%; /* 가로모드에서는 100vw가 될 것임 */
-        height: 120px; /* 높이 고정 (조정 필요할 수 있음) */
+        width: 100%;
+        height: 120px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -122,7 +130,7 @@
 
     /* 세로 모드일 때 보여줄 알림 (기본적으로는 숨김) */
     #orientation-alert {
-      display: flex; /* 기본적으로 표시하도록 설정, 가로 모드일 때만 숨김 */
+      display: flex;
       position: fixed;
       top: 0;
       left: 0;
@@ -141,11 +149,10 @@
     }
 
     #orientation-alert img {
-        width: 80px; /* 회전 아이콘 크기 */
+        width: 80px;
         height: 80px;
         margin-bottom: 20px;
-        /* 기존의 transform: rotate(90deg);는 새로운 이미지에 맞게 제거 또는 조정해야 합니다.
-           만약 rotate_icon.png가 이미 가로 모드 아이콘이라면 이 줄은 제거합니다. */
+        /* rotate_icon.png에 따라 필요 없으면 제거 */
         /* transform: rotate(90deg); */
     }
 
@@ -159,7 +166,7 @@
         display: block;
       }
       #uiLayer, #mobileControls {
-        display: flex; /* flex가 필요한 요소들은 flex로 */
+        display: flex;
       }
     }
 
@@ -170,14 +177,14 @@
         display: none !important;
       }
       #orientation-alert {
-        display: flex; /* 세로 모드일 때 알림 표시 */
+        display: flex;
       }
     }
 
     /* 초기 로딩 시 startScreen만 보이도록 설정 (다른 화면은 기본적으로 숨겨짐) */
     #startScreen { display: flex; }
     #winScreen, #gameOverScreen { display: none; }
-    #uiLayer, #bubbleGauge, #mobileControls, #gameCanvas { display: none; } /* 게임 시작 전에는 모두 숨김 */
+    #uiLayer, #bubbleGauge, #mobileControls, #gameCanvas { display: none; }
   </style>
 </head>
 <body>
@@ -197,7 +204,8 @@
 
   <div id="gameOverScreen">
     <h1>GAME OVER</h1>
-    <p>현재 스코어 : <span id="finalScoreGO"></span></p> <div id="rankingListGO" class="rankingList"></div>
+    <p>현재 스코어 : <span id="finalScoreGO"></span></p>
+    <div id="rankingListGO" class="rankingList"></div>
     <button id="restartButtonGO">Try Again</button>
   </div>
 
@@ -206,10 +214,10 @@
       <div id="stageDisplay">Stage 1</div>
       <div id="score">Score: 0</div>
     </div>
-    <div id="bubbleGauge"></div>
     <div id="rightUI">
       <div id="livesDisplay">❤️ 3</div>
       <div id="timerDisplay">⏰ 20</div>
+      <div id="bubbleGauge"></div>
     </div>
   </div>
 
@@ -217,7 +225,8 @@
   <audio id="bgm" src="./bgm.mp3" loop></audio>
 
   <div id="mobileControls">
-    <div id="moveBtns"> <div id="leftBtn">←</div>
+    <div id="moveBtns">
+      <div id="leftBtn">←</div>
       <div id="rightBtn">→</div>
     </div>
     <div id="actionBtns">
@@ -236,7 +245,6 @@
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    // 게임 내부 해상도는 고정
     canvas.width = 800; canvas.height = 600;
 
     const worldHeight = canvas.height * 2;
@@ -290,27 +298,23 @@
     const rankingList = document.getElementById('rankingList');
     const rankingListGO = document.getElementById('rankingListGO');
     const orientationAlert = document.getElementById('orientation-alert');
-    const finalScoreGO = document.getElementById('finalScoreGO'); // 최종 스코어 표시를 위한 요소
+    const finalScoreGO = document.getElementById('finalScoreGO');
 
-    // Fullscreen API를 시도하는 함수 (사용자 제스처 필요)
     function enterFullscreen() {
-        const elem = document.documentElement; // 문서 전체를 전체 화면으로 시도
+        const elem = document.documentElement;
         if (elem.requestFullscreen) {
             elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) { /* Firefox */
+        } else if (elem.mozRequestFullScreen) {
             elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+        } else if (elem.webkitRequestFullscreen) {
             elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) { /* IE/Edge */
+        } else if (elem.msRequestFullscreen) {
             elem.msRequestFullscreen();
         }
     }
 
-
-    // 방향 확인 및 화면 표시 관리 함수
     function checkOrientation() {
-        if (window.innerWidth < window.innerHeight) { /* 세로 모드일 때 */
-            // 모든 게임 관련 화면을 숨기고 경고 표시
+        if (window.innerWidth < window.innerHeight) {
             document.getElementById('gameCanvas').style.display = 'none';
             document.getElementById('uiLayer').style.display = 'none';
             document.getElementById('bubbleGauge').style.display = 'none';
@@ -320,40 +324,37 @@
             gameOverScreen.style.display = 'none';
 
             orientationAlert.style.display = 'flex';
-            gameStarted = false; // 게임 일시 정지
-            bgm.pause(); // BGM도 일시 정지
-        } else { /* 가로 모드일 때 */
+            gameStarted = false;
+            bgm.pause();
+        } else {
             orientationAlert.style.display = 'none';
 
-            // 현재 게임 상태에 따라 적절한 화면을 표시
-            if (gameStarted) { // 게임이 이미 시작된 상태
+            if (gameStarted) {
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
-                document.getElementById('bubbleGauge').style.display = 'flex'; // uiLayer 안에 있으므로 flex
-                setupMobileControls(); // 모바일 컨트롤러도 표시
-                update(); // 게임 루프 재개
+                document.getElementById('bubbleGauge').style.display = 'flex';
+                setupMobileControls();
+                update();
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
-                // 다른 종료/승리 화면은 숨김
                 winScreen.style.display = 'none';
                 gameOverScreen.style.display = 'none';
-            } else { // 게임이 시작되지 않은 상태 (시작, 승리, 패배 화면 중 하나)
+            } else {
                 document.getElementById('gameCanvas').style.display = 'none';
                 document.getElementById('uiLayer').style.display = 'none';
-                document.getElementById('bubbleGauge').style.display = 'none'; // uiLayer 안에 있으므로 명시적으로 숨김
-                document.getElementById('mobileControls').style.display = 'none'; // 컨트롤러 숨김
+                document.getElementById('bubbleGauge').style.display = 'none';
+                document.getElementById('mobileControls').style.display = 'none';
 
-                if (gameOverScreen.style.display !== 'none') { // 게임 오버 화면이 떠있었다면
+                if (gameOverScreen.style.display !== 'none') {
                     gameOverScreen.style.display = 'flex';
-                } else if (winScreen.style.display !== 'none') { // 승리 화면이 떠있었다면
+                } else if (winScreen.style.display !== 'none') {
                     winScreen.style.display = 'flex';
-                } else { // 기본은 시작 화면
+                } else {
                     startScreen.style.display = 'flex';
                 }
             }
         }
     }
 
-    // 화면 크기 변경 시 방향 확인
     window.addEventListener('resize', checkOrientation);
 
     function generateLevel() {
@@ -394,23 +395,19 @@
     }
 
     function startGame() {
-      // 게임 시작 시 모든 오버레이 숨기고 게임 화면 표시
       startScreen.style.display = 'none';
       winScreen.style.display = 'none';
       gameOverScreen.style.display = 'none';
       document.getElementById('gameCanvas').style.display = 'block';
       document.getElementById('uiLayer').style.display = 'flex';
       document.getElementById('bubbleGauge').style.display = 'flex';
-      setupMobileControls(); // 모바일 컨트롤러도 표시
+      setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
       resetPlayerPosition();
       bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
       update();
-
-      // 게임 시작 버튼 클릭 시 전체 화면 모드 진입 시도
-      // 이 부분은 사용자 제스처(클릭) 내에서 호출되므로 작동할 가능성이 높습니다.
       enterFullscreen();
     }
     startButton.addEventListener('click', startGame);
@@ -447,13 +444,11 @@
     function showGameOver() {
         gameStarted = false;
         bgm.pause();
-        // 게임 화면 및 UI 숨김
         document.getElementById('gameCanvas').style.display = 'none';
         document.getElementById('uiLayer').style.display = 'none';
         document.getElementById('bubbleGauge').style.display = 'none';
         document.getElementById('mobileControls').style.display = 'none';
 
-        // 게임 오버 시 최종 스코어 표시
         finalScoreGO.textContent = score;
 
         const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
@@ -462,13 +457,11 @@
     }
 
     function advanceToNextStage() {
-        // 스테이지 클리어 시 기본 점수 추가
         score += Math.ceil(stageTimer * 10);
 
-        // 스테이지 10을 클리어하면 추가 점수 및 목숨 점수 부여
         if (currentStage === totalStages) {
-            score += 300; // 스테이지 10 클리어 추가 보너스
-            score += baby.lives * 100; // 남은 목숨 당 100점 추가
+            score += 300;
+            score += baby.lives * 100;
         }
 
         currentStage++;
@@ -483,7 +476,6 @@
     function showWinScreen() {
         gameStarted = false;
         bgm.pause();
-        // 게임 화면 및 UI 숨김
         document.getElementById('gameCanvas').style.display = 'none';
         document.getElementById('uiLayer').style.display = 'none';
         document.getElementById('bubbleGauge').style.display = 'none';
