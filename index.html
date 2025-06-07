@@ -144,8 +144,9 @@
         width: 80px; /* 회전 아이콘 크기 */
         height: 80px;
         margin-bottom: 20px;
-        /* 가로 모드 아이콘으로 변경 */
-        transform: rotate(90deg);
+        /* 기존의 transform: rotate(90deg);는 새로운 이미지에 맞게 제거 또는 조정해야 합니다.
+           만약 rotate_icon.png가 이미 가로 모드 아이콘이라면 이 줄은 제거합니다. */
+        /* transform: rotate(90deg); */
     }
 
     /* 가로 모드일 때 #orientation-alert를 숨김 */
@@ -226,7 +227,7 @@
   </div>
 
   <div id="orientation-alert">
-    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+PHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTYzLjY1NiA2Ljk0M2MtLjI5Mi0uNTgyLS42OTgtLjU4Mi0uODM2IDAtLjExNy4zNDctLjY5NyAxLjM5LS44MzUgMS45NzVsLTE1LjIyIDI5LjkxNGMtLjI2MS41NDUtLjEzLjgyNS4zMTIuODg3aDQ1LjA3NWMuNDQyLS4wNjIuNTcyLS4zNDIuMzEyLS44ODdsLTE1LjIyLTI5LjkwMWMtLjE1LS41OTItLjU3My0xLjE3LS44NjYtMS4xNzF6bS0uNTgzIDE3Ljc5NmM0LjEwOCAwIDcuNDQyIDMuMzM0IDcuNDQyIDcuNDQyczMuMzM0IDcuNDQyIDcuNDQyIDcuNDQyczcuNDQyLTMuMzM0IDcuNDQyLTcuNDQyLTMuMzM0LTcuNDQyLTcuNDQyLTcuNDQyem0tNDIuMzYyLTQuMDY2YzIuNzE3IDUuNDU2IDcuMjQ3IDQuMDM1IDguMDYyIDYuNTcyTDEyOCAzMC44MjZ2NjYuMzI0Yy0uMTA5IDYuNzA4LTUuNjcgMTIuMzY4LTEyLjM3MiAxMi40NzRIMTQuMzU4QzcuNjYgMTA5LjYyIDIgMTA0LjA1OSAyIDk3LjM1MVYyNS43NDJsMjcuNzcyLTcuOTMyYy44MTQtMi41MzcgNS4zNDUtMS4xMTYgOC4wNjMtNi41NzJ6bS0yNy43NzIgNjcuMTI1YzAgMi42NjYgMi4xNjUgNC44MzIgNC44MzUgNC44MzJoNzYuNDc2YzIuNjcgMCA0LjgzNC0yLjE2NiA0LjgzNC00LjgzMnYtNDkuOTI4YzAtLjI1OC0uMTU2LS40ODgtLjQxNC0uNTU3bC0zOC41NzMtMTAuODU2Yy0uNjk0LS4xOTMtMS4zOCAwLS40ODcgMi.xNThsMjEuNTYgMjEuMDQyYy40ODcuNDcyLjYwMy0uMDQzLjYwMy0uNzc5di0xMi42MjljMC0uNTUyLjQ1NS0xLjAwMyAxLjAwNi0xLjAwM2gxLjIyOWMuNTUyIDAgMS4wMDMuNDUzIDEuMDAzIDEuMDAzdjIzLjYzMWMwIC40ODctLjMxMi45MTMtLjc3OS45MTMtLjI2MSAwLS41NjEtLjA5NS0uODczLS4zODZsLTI1LjA2LTI0LjA2NWMtLjI2My0uMjYzLS41NDYtLjMyNi0uODMtLjMyNnMtLjU2Mi4wNjMtLjgyNC4zMjVsLTI0LjYxIDI0LjYzNGMtLjM3NS4zNzUtLjk1NS40MzctMS4zNzEuMjA1bC0uMjE5LS4wOTVjLS40ODgtLjI4NC0uNzQ1LS44MjQtLjQ4NC0xLjM3bDIwLjU3LTIwLjE4NGMuOTYt.ODY1Ljg5Ny0xLjI0Mi42My0yLjExNWwtLjIzNy0uMjE3Yy0uNTIyLS40MzQtMS4yMjItLjY5MS0xLjQxMS0xLjEyM2wtLjY1LS43MzItMS40OTgtMS42OTktMTcuOTItMjAuNjUyYy0uMDk1LS4xNTUtLjE1Ni0uMjYxLS4xNTYtLjQxN3YtLjUzYy0uMDYzLS41MjQtLjQ4Ny0uOTYtMS4wMDkt.5LjU2MSAwLS45NzYuNDQzLS45NzYgMS4wMDN2NDkuOTI4eiIvPjwvc3ZnPg==" alt="Rotate Device">
+    <img src="./rotate_icon.png" alt="Rotate to Landscape Mode">
     <p>가로 모드로 전환해 주세요.</p>
     <p>(Please switch to landscape mode)</p>
   </div>
@@ -312,7 +313,7 @@
             // 모든 게임 관련 화면을 숨기고 경고 표시
             document.getElementById('gameCanvas').style.display = 'none';
             document.getElementById('uiLayer').style.display = 'none';
-            document.getElementById('bubbleGauge').style.display = 'none'; // uiLayer 안에 있지만 명시적으로 숨김
+            document.getElementById('bubbleGauge').style.display = 'none';
             document.getElementById('mobileControls').style.display = 'none';
             startScreen.style.display = 'none';
             winScreen.style.display = 'none';
