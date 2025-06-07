@@ -9,21 +9,32 @@
     canvas {
         background: #d0f4f7;
         display: block;
-        width: 100%;
-        height: auto; /* 세로형 게임에 맞게 높이 자동 조절 */
-        aspect-ratio: 4 / 3; /* 세로 비율을 유지하여 화면을 최대한 활용 */
+        width: auto; /* 높이에 맞게 너비 자동 조절 */
+        height: 100vh; /* 뷰포트 높이에 꽉 맞춤 */
+        margin: 0 auto; /* 중앙 정렬 */
     }
     #uiLayer {
-      position: absolute; top: 10px; right: 10px; /* 오른쪽 상단으로 이동 */
-      display: flex; flex-direction: column; /* 세로로 쌓이도록 변경 */
-      align-items: flex-end; /* 오른쪽 정렬 */
-      color: #0b3c5d; font-size: 24px; font-weight: bold;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px; /* 가로 전체를 차지 */
+      display: flex;
+      justify-content: space-between; /* 양쪽 끝으로 정렬 */
+      align-items: center; /* 세로 중앙 정렬 */
+      color: #0b3c5d;
+      font-size: 24px;
+      font-weight: bold;
       pointer-events: none;
-      gap: 10px; /* 요소 간 간격 추가 */
+      z-index: 15; /* 게임 화면 위에 오도록 */
+      background-color: rgba(255, 255, 255, 0.7); /* 배경 추가 */
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    /* #stats는 제거하고 각 요소를 직접 uiLayer 안에 배치 */
-    #score, #livesDisplay, #timerDisplay {
-        text-align: right; /* 텍스트 오른쪽 정렬 */
+    #leftUI, #rightUI {
+        display: flex;
+        gap: 20px; /* 요소 간 간격 추가 */
+        align-items: center;
     }
 
     #bubbleGauge {
@@ -127,9 +138,14 @@
   </div>
 
   <div id="uiLayer">
-    <div id="score">Stage 1 | Score: 0</div>
-    <div id="livesDisplay">❤️ 3</div>
-    <div id="timerDisplay">⏰ 20</div>
+    <div id="leftUI">
+      <div id="stageDisplay">Stage 1</div>
+      <div id="score">Score: 0</div>
+    </div>
+    <div id="rightUI">
+      <div id="livesDisplay">❤️ 3</div>
+      <div id="timerDisplay">⏰ 20</div>
+    </div>
   </div>
   <div id="bubbleGauge"></div>
 
@@ -194,6 +210,7 @@
     const startScreen = document.getElementById('startScreen');
     const winScreen = document.getElementById('winScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
+    const stageDisplay = document.getElementById('stageDisplay'); // 새로 추가된 요소
     const scoreText = document.getElementById('score');
     const bubbleGauge = document.getElementById('bubbleGauge');
     const livesDisplay = document.getElementById('livesDisplay');
@@ -334,7 +351,8 @@
     }
 
     function drawUI() {
-        scoreText.textContent = `Stage ${currentStage} | Score: ${score}`;
+        stageDisplay.textContent = `Stage ${currentStage}`; // stageDisplay 업데이트
+        scoreText.textContent = `Score: ${score}`;
         livesDisplay.textContent = '❤️ ' + baby.lives;
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         bubbleGauge.innerHTML = '';
