@@ -215,7 +215,7 @@
       <div id="score">Score: 0</div>
     </div>
     <div id="rightUI">
-      <div id="livesDisplay">❤️ 3</div>
+      <div id="livesDisplay"></div> 
       <div id="timerDisplay">⏰ 20</div>
       <div id="bubbleGauge"></div>
     </div>
@@ -261,7 +261,7 @@
     const dragonImg = new Image(); dragonImg.src = "./dragon.png";
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
-    const heartImg = new Image(); heartImg.src = "./heart.png"; // 하트 이미지 추가
+    const heartImg = new Image(); heartImg.src = "./heart.png";
 
     const bgm = document.getElementById('bgm');
 
@@ -276,9 +276,9 @@
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
       isJumping: false, bubblesLeft: 5, maxBubbles: 5, bubbleJumpPower: -12,
-      lives: 5 // 목숨 3개 -> 5개로 변경
+      lives: 5 
     };
-    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = []; // hearts 배열 추가
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [];
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
@@ -292,7 +292,6 @@
         { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
         { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
         { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
-        // 11 스테이지부터 시간 30초, 하트 배치
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
         { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
         { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
@@ -379,30 +378,17 @@
     window.addEventListener('resize', checkOrientation);
 
     function generateLevel() {
-      // 맵이 변경될 때만 초기화
-      // platforms.length = 0; // 이 부분은 새 스테이지 진입 시에만 필요
-      // enemies.length = 0; // 이 부분은 새 스테이지 진입 시에만 필요
-      // enemyBubbles.length = 0; // 이 부분은 새 스테이지 진입 시에만 필요
-      // hearts.length = 0; // 새 스테이지 진입 시에만 필요
-
-      const config = stageConfigs[currentStage - 1];
-      if (!config) return;
-
-      // 스테이지 길이에 따라 worldHeight 설정
-      worldHeight = canvas.height * 2 * config.lengthMultiplier;
-      camera.y = worldHeight - canvas.height; 
-
-      // ************** 맵 생성은 스테이지 넘어갈 때만 하도록 수정 **************
-      // startGame() 또는 advanceToNextStage()에서만 호출되도록
-      // resetPlayerPosition()에서 호출되는 generateLevel()은 이제 맵을 다시 생성하지 않음.
-      // 이 함수는 "새 스테이지" 진입 시에만 호출되어야 함.
-      // 따라서 여기서는 플랫폼, 적, 하트 등의 배열을 직접 초기화합니다.
+      // 새 스테이지 진입 시에만 맵 초기화
       platforms.length = 0; 
       enemies.length = 0; 
       enemyBubbles.length = 0; 
       hearts.length = 0; 
-      // *******************************************************************
 
+      const config = stageConfigs[currentStage - 1];
+      if (!config) return;
+
+      worldHeight = canvas.height * 2 * config.lengthMultiplier;
+      camera.y = worldHeight - canvas.height; 
 
       platforms.push({ x: 0, y: worldHeight - 20, width: canvas.width });
       
@@ -420,12 +406,10 @@
 
       const createEnemy = (type, isBoss = false) => {
           let platform;
-          // 골드 드래곤은 최상단 플랫폼 근처에 고정적으로 배치
           if (isBoss) { 
               const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
-              // 골드 드래곤이 올라설 충분히 넓은 플랫폼을 찾거나, 직접 생성
-              let bossPlatform = platforms.find(p => p.y < 200 && p.width > 150); // 상단 근처의 넓은 플랫폼
-              if (!bossPlatform) { // 적절한 플랫폼이 없으면 직접 생성
+              let bossPlatform = platforms.find(p => p.y < 200 && p.width > 150); 
+              if (!bossPlatform) { 
                   bossPlatform = { x: canvas.width / 2 - 75, y: topPlatform.y + 50, width: 150 };
                   platforms.push(bossPlatform);
               }
@@ -483,16 +467,14 @@
           createEnemy('goldDragon', true);
       }
 
-      // 하트 아이템 배치 로직 추가
       if (config.heart) {
-          // 하트를 놓을 만한 적절한 플랫폼 찾기 (바닥 제외, 너무 높지 않은)
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
               const heartPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
               hearts.push({
-                  x: heartPlatform.x + heartPlatform.width / 2 - 20, // 하트 크기 고려
-                  y: heartPlatform.y - 40, // 플랫폼 위
-                  width: 30, height: 30, // 하트 이미지 크기
+                  x: heartPlatform.x + heartPlatform.width / 2 - 20, 
+                  y: heartPlatform.y - 40, 
+                  width: 30, height: 30, 
                   collected: false
               });
           }
@@ -513,15 +495,13 @@
       setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; 
-      baby.lives = 5; // 게임 시작 시 목숨 초기화 (5개)
+      baby.lives = 5; 
 
-      generateLevel(); // 첫 스테이지 맵 생성
+      generateLevel(); 
       resetPlayerPosition(); 
       bgm.currentTime = 0; 
       bgm.play().catch(e => {
         console.log("BGM 재생 오류:", e);
-        // 사용자 제스처 없이 자동 재생이 막힐 경우를 대비한 안내
-        // alert("음악 재생이 브라우저 설정에 의해 차단될 수 있습니다. 화면을 한 번 클릭하여 재생을 시도해주세요.");
       });
       update();
       enterFullscreen();
@@ -531,11 +511,9 @@
     restartButtonGO.addEventListener('click', startGame);
 
     function resetPlayerPosition() {
-        // 스테이지 타이머 설정 (11스테이지부터 30초)
         const config = stageConfigs[currentStage - 1];
         stageTimer = config ? config.timer : 20;
         
-        // 현재 스테이지에 맞는 worldHeight 설정
         if (config) {
             worldHeight = canvas.height * 2 * config.lengthMultiplier;
         } else {
@@ -547,7 +525,7 @@
         baby.dy = 0; 
         camera.y = worldHeight - canvas.height; 
         baby.bubblesLeft = baby.maxBubbles;
-        // 사망 시 맵 초기화 방지: enemies, enemyBubbles, hearts, platforms 배열을 초기화하지 않습니다.
+        // 사망 시 맵 초기화 방지: 적과 버블, 하트 배열을 초기화하지 않습니다.
         // generateLevel()도 호출하지 않습니다.
     }
 
@@ -558,7 +536,7 @@
         } else {
             resetPlayerPosition();
             // 플레이어가 죽었을 때 적들이나 버블들이 사라져야 한다면 이곳에서 초기화 로직 추가
-            // 예: enemies.forEach(e => { /* 적 초기 위치로 돌리거나 */ });
+            // 예: enemies.length = 0; enemyBubbles.length = 0; (적, 버블 초기화)
             // 현재 요구사항은 "맵 변화 없음"이므로 적 위치는 그대로 둡니다.
         }
     }
@@ -602,8 +580,8 @@
         if (currentStage > totalStages) {
             showWinScreen();
         } else {
-            generateLevel(); // 새 스테이지 진입 시에만 맵 생성
-            resetPlayerPosition(); // 플레이어 위치, 타이머, 버블 등 초기화
+            generateLevel(); 
+            resetPlayerPosition(); 
         }
     }
 
@@ -648,7 +626,7 @@
 
       // 하트 그리기
       hearts.forEach(h => {
-          if (!h.collected) { // 획득하지 않은 하트만 그리기
+          if (!h.collected) { 
               ctx.drawImage(heartImg, h.x, h.y, h.width, h.height);
           }
       });
@@ -678,7 +656,8 @@
     function drawUI() {
         stageDisplay.textContent = `Stage ${currentStage} / ${totalStages}`;
         scoreText.textContent = `Score: ${score}`;
-        livesDisplay.textContent = '❤️ ' + baby.lives;
+        // 목숨 표시 수정: baby.lives - 1로 표시
+        livesDisplay.textContent = '❤️ ' + Math.max(0, baby.lives - 1); 
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         bubbleGauge.innerHTML = '';
         for(let i = 0; i < baby.maxBubbles; i++) {
@@ -724,9 +703,8 @@
           if (!h.collected && 
               baby.x < h.x + h.width && baby.x + baby.width > h.x &&
               baby.y < h.y + h.height && baby.y + baby.height > h.y) {
-              baby.lives++; // 생명 증가
-              h.collected = true; // 하트 획득 표시
-              // hearts.splice(index, 1); // 배열에서 즉시 제거하지 않고 collected 플래그로 관리 (그리기에서 제외)
+              baby.lives++; 
+              h.collected = true; 
           }
       });
 
@@ -864,27 +842,25 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg]; // heartImg 추가
+    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
     }));
     const audioPromise = new Promise((resolve, reject) => {
-        // BGM 로딩에 대한 오류 처리 강화
         bgm.oncanplaythrough = resolve; 
         bgm.onerror = (e) => {
             console.error("BGM 로딩 오류:", e);
             reject(new Error("BGM could not be loaded. Check file path and format."));
         };
-        // 만약 오디오가 로드되지 않거나 재생 준비가 안 되었을 경우를 대비한 타임아웃
         setTimeout(() => {
-            if (bgm.readyState < 3) { // HAVE_FUTURE_DATA
+            if (bgm.readyState < 3) {
                 reject(new Error("BGM loading timed out."));
             }
-        }, 5000); // 5초 타임아웃
+        }, 5000); 
     });
 
-    Promise.all(imagePromises, audioPromise).then(() => { // audioPromise도 Promise.all에 포함
+    Promise.all(imagePromises, audioPromise).then(() => { 
       startButton.disabled = false; startButton.textContent = 'Start Game';
       checkOrientation(); 
     }).catch(error => {
