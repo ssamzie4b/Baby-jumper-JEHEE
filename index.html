@@ -11,7 +11,7 @@
   <style>
     body {
       margin: 0;
-      overflow: hidden; 
+      overflow: hidden; /* 기본적으로 전체 페이지 스크롤 방지. 오버레이는 자체 스크롤 가짐 */
       font-family: 'Arial', sans-serif;
       background-color: #f0f0f0;
       height: 100vh; /* 브라우저 뷰포트 높이 고정 */
@@ -72,7 +72,8 @@
 
     #startScreen, #winScreen, #gameOverScreen {
       position: absolute; width: 100%;
-      height: 100vh; /* JS에서 동적으로 변경될 것입니다. */
+      /* height는 JS에서 동적으로 설정하고, overflow-y: auto로 스크롤 가능하게 함 */
+      height: 100vh; /* 초기값. JS에서 동적으로 변경됩니다. */
       background: linear-gradient(to bottom, #a8e0f7, #d9f7fc);
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; z-index: 10; text-align: center;
@@ -91,6 +92,7 @@
       background-color: #ff9f1c; color: white;
       border: 2px solid #e68a00; border-radius: 12px; cursor: pointer;
       box-shadow: 0 4px #e68a00;
+      /* 버튼 자체의 위치를 고정하거나 margin-bottom을 조정하여 화면 하단에 여백을 둡니다. */
     }
     .rankingList {
       font-size: 18px; color: #333; margin: 20px 0; text-align: left;
@@ -103,7 +105,8 @@
     /* [모바일] 터치 컨트롤 버튼 스타일 */
     #mobileControls {
         position: fixed;
-        bottom: 80px; /* 브라우저 하단 UI와 겹치지 않도록 충분히 위로 올림 */
+        /* 브라우저 하단 UI와 겹치지 않도록 충분히 위로 올림 */
+        bottom: 80px; /* 이전에 10px였으나, 더 많은 여유를 주기 위해 80px로 변경 */
         left: 0;
         width: 100%;
         height: 120px;
@@ -129,8 +132,8 @@
         width: 70px;
         height: 70px;
         background-color: rgba(255, 159, 28, 0.7);
-        color: white; /* 텍스트가 사라지므로 이 색상은 더 이상 중요하지 않습니다 */
-        font-size: 24px; /* 텍스트가 사라지므로 이 폰트 크기는 더 이상 중요하지 않습니다 */
+        color: white;
+        font-size: 24px;
         font-weight: bold;
         display: flex;
         justify-content: center;
@@ -139,12 +142,7 @@
         border: 3px solid rgba(230, 138, 0, 0.9);
         box-shadow: 0 4px rgba(230, 138, 0, 0.9);
     }
-    /* 버튼 내부 이미지 스타일 (새로 추가) */
-    #mobileControls img {
-        width: 100%; /* 버튼 크기에 맞춰 이미지 채우기 */
-        height: 100%;
-        object-fit: contain; /* 이미지 비율 유지하며 버튼 안에 맞추기 */
-    }
+
 
     /* 세로 모드일 때 보여줄 알림 (기본적으로는 숨김) */
     #orientation-alert {
@@ -172,6 +170,8 @@
         width: 80px;
         height: 80px;
         margin-bottom: 20px;
+        /* rotate_icon.png에 따라 필요 없으면 제거 */
+        /* transform: rotate(90deg); */
     }
 
     /* 가로 모드일 때 #orientation-alert를 숨김 */
@@ -244,12 +244,12 @@
 
   <div id="mobileControls">
     <div id="moveBtns">
-      <div id="leftBtn"></div> 
-      <div id="rightBtn"></div> 
+      <div id="leftBtn">←</div>
+      <div id="rightBtn">→</div>
     </div>
     <div id="actionBtns">
-      <div id="bubbleJumpBtn"></div> 
-      <div id="jumpBtn"></div> 
+      <div id="bubbleJumpBtn">BUBBLE</div>
+      <div id="jumpBtn">JUMP</div>
     </div>
   </div>
 
@@ -261,26 +261,30 @@
 
 
   <script>
+    // 오버레이 화면의 높이를 동적으로 설정하여 스크롤 가능하게 만드는 함수
     function setScreenHeights() {
         const screenHeight = window.innerHeight;
+        // 브라우저 UI 때문에 가려지는 부분을 고려하여 높이에 여유를 줌 (예: 100px 추가)
         const scrollableHeight = screenHeight + 100; // 100px는 예시. 필요에 따라 조정
 
         const screens = [
             document.getElementById('startScreen'),
             document.getElementById('winScreen'),
             document.getElementById('gameOverScreen'),
-            document.getElementById('orientation-alert') 
+            document.getElementById('orientation-alert') // 방향 알림 화면도 포함
         ];
 
         screens.forEach(screen => {
             if (screen) {
-                screen.style.height = `${screenHeight}px`; 
-                screen.style.minHeight = `${scrollableHeight}px`; 
+                screen.style.height = `${screenHeight}px`; // 일단 뷰포트 높이에 맞춤
+                screen.style.minHeight = `${scrollableHeight}px`; // 최소 높이를 더 크게 설정하여 스크롤 유도
             }
         });
     }
 
+    // 초기 로드 시 설정
     setScreenHeights();
+    // 화면 크기 또는 방향이 변경될 때마다 다시 설정
     window.addEventListener('resize', setScreenHeights);
     window.addEventListener('orientationchange', setScreenHeights);
 
@@ -304,13 +308,6 @@
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
-
-    // 새로운 버튼 이미지 로드 (경로 확인)
-    const leftButtonImg = new Image(); leftButtonImg.src = "./Leftbutton.jpg";
-    const rightButtonImg = new Image(); rightButtonImg.src = "./Rightbutton.jpg";
-    const jumpButtonImg = new Image(); jumpButtonImg.src = "./Jumpbutton.jpg";
-    const bubbleButtonImg = new Image(); bubbleButtonImg.src = "./Bubblebutton.jpg";
-
 
     const bgm = document.getElementById('bgm');
 
@@ -422,8 +419,13 @@
                 }
             }
         }
-        setScreenHeights(); // 화면 방향이 바뀔 때마다 오버레이 화면 높이 재설정
+        // 화면 방향이 바뀔 때마다 오버레이 화면 높이 재설정
+        setScreenHeights();
     }
+
+    // resize 이벤트는 setScreenHeights()와 checkOrientation() 모두에 필요
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
 
     function generateLevel() {
       platforms.length = 0; 
@@ -539,7 +541,7 @@
       document.getElementById('gameCanvas').style.display = 'block';
       document.getElementById('uiLayer').style.display = 'flex';
       document.getElementById('bubbleGauge').style.display = 'flex';
-      setupMobileControls(); // 버튼 이미지 설정 호출
+      setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; 
       baby.lives = 5; 
@@ -608,7 +610,8 @@
         const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
         updateAndShowRanking(playerName || "Guest", rankingListGO);
         gameOverScreen.style.display = 'flex';
-        setScreenHeights(); // 화면이 표시될 때 높이 재설정
+        // 게임 오버 화면 표시 후, 화면 높이 재설정 호출
+        setScreenHeights(); 
     }
 
     function advanceToNextStage() {
@@ -643,7 +646,8 @@
         const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
         updateAndShowRanking(playerName || "Guest", rankingList);
         winScreen.style.display = 'flex';
-        setScreenHeights(); // 화면이 표시될 때 높이 재설정
+        // 승리 화면 표시 후, 화면 높이 재설정 호출
+        setScreenHeights();
     }
 
     function bubbleJump() {
@@ -849,24 +853,6 @@
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
 
-        // 기존 텍스트 제거 및 이미지 요소 생성
-        leftBtn.innerHTML = '';
-        rightBtn.innerHTML = '';
-        jumpBtn.innerHTML = '';
-        bubbleJumpBtn.innerHTML = '';
-
-        // 이미지 요소 생성 및 추가 (img.src가 로드 완료될 때까지 기다리지 않고 즉시 추가)
-        const leftImg = document.createElement('img'); leftImg.src = './Leftbutton.jpg';
-        const rightImg = document.createElement('img'); rightImg.src = './Rightbutton.jpg';
-        const jumpImg = document.createElement('img'); jumpImg.src = './Jumpbutton.jpg';
-        const bubbleImgBtn = document.createElement('img'); bubbleImgBtn.src = './Bubblebutton.jpg';
-
-        leftBtn.appendChild(leftImg);
-        rightBtn.appendChild(rightImg);
-        jumpBtn.appendChild(jumpImg);
-        bubbleJumpBtn.appendChild(bubbleImgBtn);
-
-        // 기존 이벤트 리스너 제거 (중복 등록 방지)
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
         leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
         rightBtn.removeEventListener('touchstart', handleRightTouchStart);
@@ -874,7 +860,6 @@
         jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
         bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
 
-        // 새로운 이벤트 리스너 등록
         leftBtn.addEventListener('touchstart', handleLeftTouchStart);
         leftBtn.addEventListener('touchend', handleLeftTouchEnd);
         rightBtn.addEventListener('touchstart', handleRightTouchStart);
@@ -891,7 +876,7 @@
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
 
 
-    setupMobileControls(); // 페이지 로드 시 바로 버튼 세팅
+    setupMobileControls();
 
     document.addEventListener('keydown', e => {
       if (!gameStarted || window.innerWidth < window.innerHeight) return;
@@ -906,10 +891,7 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [
-        babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg,
-        leftButtonImg, rightButtonImg, jumpButtonImg, bubbleButtonImg // 새로운 버튼 이미지 추가
-    ];
+    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
