@@ -190,7 +190,7 @@
 <body>
   <div id="startScreen">
     <h1>Baby Jumper "Jehee"</h1>
-    <p>5개의 버블로 10개의 스테이지를 정복하세요!</p>
+    <p>5개의 버블로 20개의 스테이지를 정복하세요!</p>
     <p><strong>Controls:</strong> ← → to move, A to Jump, SPACE to Bubble Jump</p>
     <button id="startButton" disabled>게임 로딩중...</button>
   </div>
@@ -222,7 +222,7 @@
   </div>
 
   <canvas id="gameCanvas"></canvas>
-  <audio id="bgm" src="./bgm.mp3" loop></audio>
+  <audio id="bgm" src="./bgm.mpm" loop></audio>
 
   <div id="mobileControls">
     <div id="moveBtns">
@@ -247,7 +247,9 @@
     const ctx = canvas.getContext('2d');
     canvas.width = 800; canvas.height = 600;
 
-    const worldHeight = canvas.height * 2;
+    // worldHeight는 스테이지에 따라 동적으로 설정됩니다.
+    let worldHeight = canvas.height * 2; 
+
     const camera = {
       y: worldHeight - canvas.height,
       lerpFactor: 0.08
@@ -258,30 +260,51 @@
     const bubbleImg = new Image(); bubbleImg.src = "./bubble.png";
     const goalImg = new Image(); goalImg.src = "./milk.png";
     const dragonImg = new Image(); dragonImg.src = "./dragon.png";
+    // 새로운 적 이미지 추가
+    const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
+    const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
+
     const bgm = document.getElementById('bgm');
 
     let gameStarted = false, score = 0;
     let currentStage = 1;
-    const totalStages = 10;
+    const totalStages = 20; // 총 스테이지 수 20으로 변경
     let stageTimer = 20;
     let lastTime = 0, deltaTime = 0;
 
     const baby = {
-      x: canvas.width / 2 - 25, y: worldHeight - 80,
+      x: canvas.width / 2 - 25, y: worldHeight - 80, // 초기 worldHeight는 현재 스테이지에 따라 결정
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
       isJumping: false, bubblesLeft: 5, maxBubbles: 5, bubbleJumpPower: -12,
       lives: 3
     };
-    const platforms = [], bubbles = [], enemies = [];
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = []; // playerBubbles로 이름 변경, enemyBubbles 추가
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
+    // 스테이지 설정 업데이트: totalStages를 20으로 늘리고, redDragon, goldDragon 속성 추가
     const stageConfigs = [
-        { stage: 1, normal: 0, fast: 0, jumper: 0 }, { stage: 2, normal: 1, fast: 0, jumper: 0 },
-        { stage: 3, normal: 2, fast: 0, jumper: 0 }, { stage: 4, normal: 3, fast: 0, jumper: 0 },
-        { stage: 5, normal: 4, fast: 0, jumper: 0 }, { stage: 6, normal: 3, fast: 2, jumper: 0 },
-        { stage: 7, normal: 3, fast: 2, jumper: 1 }, { stage: 8, normal: 7, fast: 2, jumper: 1 },
-        { stage: 9, normal: 6, fast: 4, jumper: 2 }, { stage: 10, normal: 4, fast: 8, jumper: 3 }
+        { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1 },
+        // 11 스테이지부터 추가 설정
+        { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 0, goldDragon: 1, lengthMultiplier: 1.5 }, // reddragon 개수 조정 필요 (1마리 golddragon 출현)
+        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5 },
+        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5 } // 골드 드래곤 최종 보스
     ];
 
     const startButton = document.getElementById('startButton');
@@ -358,37 +381,91 @@
     window.addEventListener('resize', checkOrientation);
 
     function generateLevel() {
-      platforms.length = 0; enemies.length = 0;
+      platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; // 적 버블 초기화
+      
+      const config = stageConfigs[currentStage - 1];
+      if (!config) return;
+
+      // 스테이지 길이에 따라 worldHeight 설정
+      worldHeight = canvas.height * 2 * config.lengthMultiplier;
+      camera.y = worldHeight - canvas.height; // 카메라 초기 위치 재설정
+
+      // 바닥 플랫폼 추가
       platforms.push({ x: 0, y: worldHeight - 20, width: canvas.width });
+      
       let currentY = worldHeight - 100;
-      while (currentY > 100) {
+      // 스테이지 길이에 비례하여 플랫폼 생성
+      while (currentY > 100 + (worldHeight - canvas.height * 2) / 2) { // 상단 부분은 일정하게 유지
         let pWidth = 100 + Math.random() * 50;
         let pX = Math.random() * (canvas.width - pWidth);
         platforms.push({ x: pX, y: currentY, width: pWidth });
-        currentY -= 70 + Math.random() * 50;
+        currentY -= 70 + Math.random() * 50; // 플랫폼 간격
       }
-      const config = stageConfigs[currentStage - 1];
-      if (!config) return;
-      const spawnPlatforms = [...platforms].slice(1);
+
+      const spawnPlatforms = [...platforms].slice(1); // 바닥 플랫폼 제외
       spawnPlatforms.sort(() => 0.5 - Math.random());
       let platformIndex = 0;
-      const createEnemy = (type) => {
-          if (spawnPlatforms.length === 0) return;
-          const platform = spawnPlatforms[platformIndex % spawnPlatforms.length];
-          platformIndex++;
-          const enemyData = {
-              x: platform.x + platform.width / 2 - 17, y: platform.y - 35, width: 35, height: 35,
-              direction: Math.random() < 0.5 ? 1 : -1, type: type,
-              speed: 1 + Math.random() * currentStage * 0.15,
-              dy: 0, groundY: platform.y - 35, jumpPower: -7 - Math.random() * 2,
-          };
-          if (type === 'fast') { enemyData.speed *= 2; }
-          if (type === 'jumper') { enemyData.speed = 0; }
-          enemies.push(enemyData);
+
+      const createEnemy = (type, isBoss = false) => {
+          let platform;
+          if (isBoss) { // 보스는 최상단 플랫폼 근처에 배치
+              const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
+              platform = topPlatform;
+          } else { // 일반 적은 랜덤 플랫폼
+              if (spawnPlatforms.length === 0) return;
+              platform = spawnPlatforms[platformIndex % spawnPlatforms.length];
+              platformIndex++;
+          }
+          
+          let enemyWidth = 35;
+          let enemyHeight = 35;
+          let enemySpeed = 1 + Math.random() * currentStage * 0.15;
+          let jumpPower = -7 - Math.random() * 2;
+          let image = dragonImg;
+          let shootInterval = 0; // 버블 발사 간격
+
+          if (type === 'fast') { enemySpeed *= 2; }
+          if (type === 'jumper') { enemySpeed = 0; }
+          if (type === 'redDragon') { 
+            image = redDragonImg; 
+            shootInterval = 1000 + Math.random() * 1500; // 1~2.5초마다 버블 발사
+          }
+          if (type === 'goldDragon') {
+            image = goldDragonImg;
+            enemyWidth *= 2; // 가로 2배
+            enemyHeight *= 2; // 세로 2배
+            enemySpeed = 1; // 일반 스피드 유지
+            shootInterval = 800 + Math.random() * 1200; // 0.8~2초마다 버블 발사
+          }
+
+
+          enemies.push({
+              x: platform.x + platform.width / 2 - enemyWidth / 2, 
+              y: platform.y - enemyHeight, 
+              width: enemyWidth, 
+              height: enemyHeight,
+              direction: Math.random() < 0.5 ? 1 : -1, 
+              type: type,
+              speed: enemySpeed,
+              dy: 0, 
+              groundY: platform.y - enemyHeight, 
+              jumpPower: jumpPower,
+              image: image,
+              lastShotTime: 0,
+              shootInterval: shootInterval
+          });
       };
+
+      // 스테이지 설정에 따라 적 생성
       for(let i=0; i<config.normal; i++) createEnemy('normal');
       for(let i=0; i<config.fast; i++) createEnemy('fast');
       for(let i=0; i<config.jumper; i++) createEnemy('jumper');
+      for(let i=0; i<config.redDragon; i++) createEnemy('redDragon');
+      // 골드 드래곤은 20스테이지에서만, 그리고 하나만 생성
+      if (config.goldDragon > 0 && currentStage === 20) {
+          createEnemy('goldDragon', true); // isBoss = true
+      }
+      
       const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
       goal.x = topPlatform.x + (topPlatform.width / 2) - (goal.width / 2);
       goal.y = topPlatform.y - goal.height - 15;
@@ -405,7 +482,7 @@
 
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
-      resetPlayerPosition();
+      resetPlayerPosition(); // resetPlayerPosition에서 worldHeight 재설정
       bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
       update();
       enterFullscreen();
@@ -415,9 +492,24 @@
     restartButtonGO.addEventListener('click', startGame);
 
     function resetPlayerPosition() {
-        stageTimer = 20; baby.x = canvas.width / 2 - 25; baby.y = worldHeight - 80;
-        baby.dy = 0; camera.y = worldHeight - canvas.height;
+        stageTimer = 20; 
+        
+        // 현재 스테이지에 맞는 worldHeight 설정
+        const config = stageConfigs[currentStage - 1];
+        if (config) {
+            worldHeight = canvas.height * 2 * config.lengthMultiplier;
+        } else {
+            worldHeight = canvas.height * 2; // 기본값
+        }
+
+        baby.x = canvas.width / 2 - 25; 
+        baby.y = worldHeight - 80; // 재설정된 worldHeight에 맞춰 플레이어 위치 조정
+        baby.dy = 0; 
+        camera.y = worldHeight - canvas.height; // 카메라 위치도 재설정
         baby.bubblesLeft = baby.maxBubbles;
+        enemies.length = 0; // 적 초기화
+        enemyBubbles.length = 0; // 적 버블 초기화
+        generateLevel(); // 새 레벨 생성
     }
 
     function handleLoseLife() {
@@ -459,7 +551,7 @@
     function advanceToNextStage() {
         score += Math.ceil(stageTimer * 10);
 
-        if (currentStage === totalStages) {
+        if (currentStage === totalStages) { // 마지막 스테이지 클리어 보너스
             score += 300;
             score += baby.lives * 100;
         }
@@ -468,8 +560,7 @@
         if (currentStage > totalStages) {
             showWinScreen();
         } else {
-            generateLevel();
-            resetPlayerPosition();
+            resetPlayerPosition(); // 새 스테이지를 위해 플레이어 위치 초기화 및 레벨 생성
         }
     }
 
@@ -488,8 +579,10 @@
 
     function bubbleJump() {
       if (baby.bubblesLeft > 0 && gameStarted) {
-        baby.bubblesLeft--; baby.dy = baby.bubbleJumpPower;
-        bubbles.push({x: baby.x + baby.width / 2, y: baby.y + baby.height, radius: 15, life: 30});
+        baby.bubblesLeft--; 
+        baby.dy = baby.bubbleJumpPower;
+        // 플레이어 버블: x, y, radius, life, (dx, dy는 필요시 추가)
+        playerBubbles.push({x: baby.x + baby.width / 2, y: baby.y + baby.height, radius: 15, life: 30});
       }
     }
 
@@ -497,24 +590,48 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(0, -camera.y);
+
+      // 배경색 그리기 (worldHeight에 따라)
+      ctx.fillStyle = '#d0f4f7';
+      ctx.fillRect(0, 0, canvas.width, worldHeight);
+
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
+      
       ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)';
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
       ctx.filter = 'none';
-      enemies.forEach(e => ctx.drawImage(dragonImg, e.x, e.y, e.width, e.height));
+      
+      // 적 그리기 (각 적의 이미지 사용)
+      enemies.forEach(e => {
+        ctx.drawImage(e.image, e.x, e.y, e.width, e.height);
+      });
+
       ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
-      bubbles.forEach((b, index) => {
+      
+      // 플레이어 버블 그리기
+      playerBubbles.forEach((b, index) => {
         b.y += 2; b.radius *= 0.95; b.life--;
         ctx.globalAlpha = b.life / 30;
         ctx.drawImage(bubbleImg, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2);
-        if (b.life <= 0) bubbles.splice(index, 1);
+        if (b.life <= 0) playerBubbles.splice(index, 1);
       });
+
+      // 적 버블 그리기
+      enemyBubbles.forEach((b, index) => {
+        b.x += b.dx;
+        b.y += b.dy;
+        b.life--;
+        ctx.globalAlpha = b.life / 60; // 적 버블은 좀 더 오래 유지
+        ctx.drawImage(bubbleImg, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2);
+        if (b.life <= 0) enemyBubbles.splice(index, 1);
+      });
+
       ctx.globalAlpha = 1;
       ctx.restore();
     }
 
     function drawUI() {
-        stageDisplay.textContent = `Stage ${currentStage}`;
+        stageDisplay.textContent = `Stage ${currentStage} / ${totalStages}`; // 총 스테이지 수 표시
         scoreText.textContent = `Score: ${score}`;
         livesDisplay.textContent = '❤️ ' + baby.lives;
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
@@ -533,46 +650,120 @@
       deltaTime = (time - lastTime) / 1000; lastTime = time;
       stageTimer -= deltaTime;
       if (stageTimer <= 0) { handleLoseLife(); }
-      baby.x += baby.dx; baby.dy += baby.gravity; baby.y += baby.dy;
+
+      // 플레이어 이동 및 물리
+      baby.x += baby.dx; 
+      baby.dy += baby.gravity; 
+      baby.y += baby.dy;
+
+      // 카메라 업데이트
       const cameraTargetY = baby.y - canvas.height / 2;
       camera.y += (cameraTargetY - camera.y) * camera.lerpFactor;
       if (camera.y < 0) camera.y = 0;
+      // 카메라가 worldHeight 끝을 넘지 않도록
       if (camera.y > worldHeight - canvas.height) { camera.y = worldHeight - canvas.height; }
 
+      // 플레이어 화면 경계 처리
       if (baby.x < 0) baby.x = 0;
       if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
 
-      if (baby.dy > 0) {
+      // 플레이어 플랫폼 충돌 처리
+      if (baby.dy > 0) { // 하강 중일 때만 충돌 검사
         platforms.forEach(p => {
           if (baby.x + baby.width > p.x && baby.x < p.x + p.width &&
-              baby.y + baby.height > p.y && baby.y < p.y + 20) {
-            baby.y = p.y - baby.height; baby.dy = 0; baby.isJumping = false;
+              baby.y + baby.height > p.y && baby.y < p.y + 20) { // 플랫폼 높이 20
+            baby.y = p.y - baby.height; 
+            baby.dy = 0; 
+            baby.isJumping = false;
           }
         });
       }
+
+      // 적 업데이트 및 충돌 처리
       enemies.forEach(e => {
         switch(e.type) {
-            case 'normal': case 'fast':
+            case 'normal': 
+            case 'fast':
                 e.x += e.speed * e.direction;
                 if(e.x < 0 || e.x + e.width > canvas.width) e.direction *= -1;
                 break;
             case 'jumper':
-                e.dy += baby.gravity * 0.5; e.y += e.dy;
-                if (e.y > e.groundY && e.dy > 0) { e.y = e.groundY; e.dy = e.jumpPower; }
+                e.dy += baby.gravity * 0.5; // 점퍼 적은 중력 영향을 더 적게 받음
+                e.y += e.dy;
+                // 땅에 닿으면 점프
+                if (e.y > e.groundY && e.dy > 0) { 
+                    e.y = e.groundY; 
+                    e.dy = e.jumpPower; 
+                }
+                break;
+            case 'redDragon':
+            case 'goldDragon':
+                // 레드/골드 드래곤은 좌우 이동
+                e.x += e.speed * e.direction;
+                if(e.x < 0 || e.x + e.width > canvas.width) e.direction *= -1;
+
+                // 버블 발사 로직
+                if (time - e.lastShotTime > e.shootInterval) {
+                    const bubbleRadius = (e.type === 'goldDragon') ? 30 : 15; // 골드 드래곤 버블 2배 크기
+                    const bubbleLife = (e.type === 'goldDragon') ? 120 : 60; // 골드 드래곤 버블 더 오래 유지
+                    const bubbleSpeed = (e.type === 'goldDragon') ? 1.5 : 2; // 버블 속도
+                    
+                    const angle = Math.atan2(baby.y + baby.height / 2 - (e.y + e.height / 2), baby.x + baby.width / 2 - (e.x + e.width / 2));
+                    enemyBubbles.push({
+                        x: e.x + e.width / 2, 
+                        y: e.y + e.height / 2, 
+                        radius: bubbleRadius, 
+                        life: bubbleLife,
+                        dx: Math.cos(angle) * bubbleSpeed,
+                        dy: Math.sin(angle) * bubbleSpeed
+                    });
+                    e.lastShotTime = time;
+                }
                 break;
         }
+
+        // 플레이어와 적 충돌
         if (baby.x < e.x + e.width && baby.x + baby.width > e.x &&
             baby.y < e.y + e.height && baby.y + baby.height > e.y) {
             handleLoseLife();
         }
       });
 
+      // 적 버블 업데이트 및 플레이어와 충돌 처리
+      enemyBubbles.forEach((b, index) => {
+          b.x += b.dx;
+          b.y += b.dy;
+          b.life--;
+
+          // 화면 밖으로 나가면 제거
+          if (b.x < -b.radius || b.x > canvas.width + b.radius || b.y < -b.radius || b.y > worldHeight + b.radius || b.life <= 0) {
+              enemyBubbles.splice(index, 1);
+              return; // 현재 버블 제거 후 다음 버블로 이동
+          }
+
+          // 플레이어와 버블 충돌
+          if (baby.x < b.x + b.radius && baby.x + baby.width > b.x - b.radius &&
+              baby.y < b.y + b.radius && baby.y + baby.height > b.y - b.radius) {
+              handleLoseLife();
+              enemyBubbles.splice(index, 1); // 충돌한 버블 제거
+          }
+      });
+
+
+      // 플레이어 낙사 처리 (worldHeight보다 아래로 떨어질 경우)
       if (baby.y > worldHeight) { handleLoseLife(); }
-      if (baby.y + baby.height < 0) { baby.y = -baby.height; baby.dy = 1; }
+      // 플레이어가 화면 상단으로 너무 높이 올라갈 경우 처리 (worldHeight는 상단이 0)
+      if (baby.y + baby.height < 0) { 
+        baby.y = -baby.height; 
+        baby.dy = 1; 
+      } // 플레이어가 너무 높이 올라갔을 때 다시 내려오도록
+
+      // 목표 지점 도달 여부 확인
       if (baby.x < goal.x + goal.width && baby.x + baby.width > goal.x &&
           baby.y < goal.y + goal.height && baby.y + baby.height > goal.y) {
         advanceToNextStage();
       }
+      
       draw();
       drawUI();
       requestAnimationFrame(update);
@@ -598,6 +789,7 @@
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
 
+        // 기존 이벤트 리스너 제거 (중복 등록 방지)
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
         leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
         rightBtn.removeEventListener('touchstart', handleRightTouchStart);
@@ -605,6 +797,7 @@
         jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
         bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
 
+        // 새로운 이벤트 리스너 등록
         leftBtn.addEventListener('touchstart', handleLeftTouchStart);
         leftBtn.addEventListener('touchend', handleLeftTouchEnd);
         rightBtn.addEventListener('touchstart', handleRightTouchStart);
@@ -636,7 +829,8 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg];
+    // 모든 게임 이미지 로딩 목록 업데이트
+    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
@@ -650,6 +844,7 @@
       checkOrientation(); // 이미지 로딩 후에도 방향 체크
     }).catch(error => {
       startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
+      console.error("Failed to load game assets:", error);
     });
 
     window.addEventListener('load', checkOrientation);
