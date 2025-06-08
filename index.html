@@ -11,11 +11,10 @@
   <style>
     body {
       margin: 0;
-      overflow: hidden; /* 전체 페이지 스크롤 방지 */
+      overflow: hidden; /* 기본적으로 전체 페이지 스크롤 방지. 오버레이는 자체 스크롤 가짐 */
       font-family: 'Arial', sans-serif;
       background-color: #f0f0f0;
-      /* body의 높이를 100vh로 유지 */
-      height: 100vh;
+      height: 100vh; /* 브라우저 뷰포트 높이 고정 */
     }
     canvas {
         background: #d0f4f7;
@@ -73,12 +72,15 @@
 
     #startScreen, #winScreen, #gameOverScreen {
       position: absolute; width: 100%;
-      height: 100%; /* 뷰포트 높이에 맞춤 */
+      /* height는 JS에서 동적으로 설정하고, overflow-y: auto로 스크롤 가능하게 함 */
+      height: 100vh; /* 초기값. JS에서 동적으로 변경됩니다. */
       background: linear-gradient(to bottom, #a8e0f7, #d9f7fc);
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; z-index: 10; text-align: center;
       box-sizing: border-box; /* padding을 포함하여 높이 계산 */
-      padding-bottom: 80px; /* 하단 버튼을 위해 충분한 여백 확보 */
+      padding-bottom: 80px; /* 하단 버튼을 위해 충분한 여백 확보 (내부 패딩) */
+      overflow-y: auto; /* 내용이 넘칠 경우 스크롤 가능하게 함 */
+      -webkit-overflow-scrolling: touch; /* iOS에서 부드러운 스크롤 */
     }
     #gameOverScreen { background: linear-gradient(to bottom, #5c5c5c, #333333); }
     #startScreen h1, #winScreen h1, #gameOverScreen h1 { font-size: 64px; color: #ff9f1c; margin-bottom: 20px; }
@@ -91,22 +93,20 @@
       border: 2px solid #e68a00; border-radius: 12px; cursor: pointer;
       box-shadow: 0 4px #e68a00;
       /* 버튼 자체의 위치를 고정하거나 margin-bottom을 조정하여 화면 하단에 여백을 둡니다. */
-      /* display: block; margin: 20px auto; (중앙정렬 및 위아래 여백) */
     }
     .rankingList {
       font-size: 18px; color: #333; margin: 20px 0; text-align: left;
       background: white; padding: 15px; border-radius: 10px; width: 300px;
-      /* 랭킹 리스트 스크롤 가능하게 만듦 */
-      max-height: 200px; /* 최대 높이 설정 */
-      overflow-y: auto; /* 내용이 넘치면 스크롤바 생성 */
+      max-height: 200px; /* 랭킹 리스트의 최대 높이를 제한하여 스크롤 가능하게 함 */
+      overflow-y: auto;
     }
     .rankingList h3 { margin-top: 0; text-align: center;}
 
     /* [모바일] 터치 컨트롤 버튼 스타일 */
     #mobileControls {
         position: fixed;
-        /* 기존 bottom: 0; 에서 변경하여 브라우저 하단 UI 위로 올림 */
-        bottom: 10px; /* 브라우저 하단 UI와 겹치지 않도록 여유 공간 */
+        /* 브라우저 하단 UI와 겹치지 않도록 충분히 위로 올림 */
+        bottom: 80px; /* 이전에 10px였으나, 더 많은 여유를 주기 위해 80px로 변경 */
         left: 0;
         width: 100%;
         height: 120px;
@@ -151,7 +151,7 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 100%; /* 뷰포트 높이에 맞춤 */
+      height: 100vh; /* JS로 동적 변경될 것입니다. */
       background: rgba(0, 0, 0, 0.9);
       color: white;
       font-size: 28px;
@@ -162,6 +162,8 @@
       z-index: 1000;
       padding: 20px;
       box-sizing: border-box;
+      overflow-y: auto; /* 오버레이도 스크롤 가능하게 */
+      -webkit-overflow-scrolling: touch;
     }
 
     #orientation-alert img {
@@ -259,9 +261,34 @@
 
 
   <script>
-    // setVh 함수는 뷰포트 높이 문제를 완전히 해결하기 어려울 수 있으므로 제거했습니다.
-    // 대신 CSS에서 직접 100vh와 하단 여백을 조정합니다.
-    
+    // 오버레이 화면의 높이를 동적으로 설정하여 스크롤 가능하게 만드는 함수
+    function setScreenHeights() {
+        const screenHeight = window.innerHeight;
+        // 브라우저 UI 때문에 가려지는 부분을 고려하여 높이에 여유를 줌 (예: 100px 추가)
+        const scrollableHeight = screenHeight + 100; // 100px는 예시. 필요에 따라 조정
+
+        const screens = [
+            document.getElementById('startScreen'),
+            document.getElementById('winScreen'),
+            document.getElementById('gameOverScreen'),
+            document.getElementById('orientation-alert') // 방향 알림 화면도 포함
+        ];
+
+        screens.forEach(screen => {
+            if (screen) {
+                screen.style.height = `${screenHeight}px`; // 일단 뷰포트 높이에 맞춤
+                screen.style.minHeight = `${scrollableHeight}px`; // 최소 높이를 더 크게 설정하여 스크롤 유도
+            }
+        });
+    }
+
+    // 초기 로드 시 설정
+    setScreenHeights();
+    // 화면 크기 또는 방향이 변경될 때마다 다시 설정
+    window.addEventListener('resize', setScreenHeights);
+    window.addEventListener('orientationchange', setScreenHeights);
+
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = 800; canvas.height = 600;
@@ -392,11 +419,11 @@
                 }
             }
         }
+        // 화면 방향이 바뀔 때마다 오버레이 화면 높이 재설정
+        setScreenHeights();
     }
 
-    // resize 이벤트는 필요에 따라 setVh()만 호출하거나, checkOrientation()을 호출합니다.
-    // 여기서는 checkOrientation()이 모든 UI display 로직을 가지고 있으므로,
-    // resize와 orientationchange 이벤트에 checkOrientation()만 연결합니다.
+    // resize 이벤트는 setScreenHeights()와 checkOrientation() 모두에 필요
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
 
@@ -583,6 +610,8 @@
         const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
         updateAndShowRanking(playerName || "Guest", rankingListGO);
         gameOverScreen.style.display = 'flex';
+        // 게임 오버 화면 표시 후, 화면 높이 재설정 호출
+        setScreenHeights(); 
     }
 
     function advanceToNextStage() {
@@ -617,6 +646,8 @@
         const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
         updateAndShowRanking(playerName || "Guest", rankingList);
         winScreen.style.display = 'flex';
+        // 승리 화면 표시 후, 화면 높이 재설정 호출
+        setScreenHeights();
     }
 
     function bubbleJump() {
