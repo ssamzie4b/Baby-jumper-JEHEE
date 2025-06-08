@@ -222,7 +222,7 @@
   </div>
 
   <canvas id="gameCanvas"></canvas>
-  <audio id="bgm" src="./bgm.mpm" loop></audio>
+  <audio id="bgm" src="./bgm.mp3" loop></audio> 
 
   <div id="mobileControls">
     <div id="moveBtns">
@@ -297,7 +297,7 @@
         // 11 스테이지부터 추가 설정
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5 },
         { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5 },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 0, goldDragon: 1, lengthMultiplier: 1.5 }, // reddragon 개수 조정 필요 (1마리 golddragon 출현)
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5 }, // reddragon 1마리
         { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5 },
         { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5 },
         { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5 },
@@ -358,6 +358,7 @@
                 document.getElementById('bubbleGauge').style.display = 'flex';
                 setupMobileControls();
                 update();
+                // 사용자가 한 번이라도 상호작용해야 BGM 자동 재생이 허용될 수 있습니다.
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
                 winScreen.style.display = 'none';
                 gameOverScreen.style.display = 'none';
@@ -483,7 +484,13 @@
       gameStarted = true; score = 0; currentStage = 1; baby.lives = 3;
       generateLevel();
       resetPlayerPosition(); // resetPlayerPosition에서 worldHeight 재설정
-      bgm.currentTime = 0; bgm.play().catch(e => console.log("BGM 재생 오류:", e));
+      // 게임 시작 시 BGM 재생
+      bgm.currentTime = 0; 
+      bgm.play().catch(e => {
+        console.log("BGM 재생 오류:", e);
+        // 사용자 제스처 없이 자동 재생이 막힐 경우를 대비한 안내
+        alert("음악 재생이 브라우저 설정에 의해 차단될 수 있습니다. 화면을 한 번 클릭하여 재생을 시도해주세요.");
+      });
       update();
       enterFullscreen();
     }
