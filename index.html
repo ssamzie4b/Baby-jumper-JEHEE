@@ -260,6 +260,10 @@
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
+    // 새로운 이미지 추가: 기저귀, 슈퍼아기
+    const diaperImg = new Image(); diaperImg.src = "./diaper.png";
+    const superbabyImg = new Image(); superbabyImg.src = "./superbaby.png";
+
 
     const bgm = document.getElementById('bgm');
 
@@ -269,7 +273,6 @@
     let stageTimer = 20;
     let lastTime = 0, deltaTime = 0;
 
-    // 버블 재충전 관련 변수 추가
     const BUBBLE_RECHARGE_INTERVAL = 5000; // 5초 (밀리초)
     let lastBubbleRechargeTime = 0;
 
@@ -278,35 +281,40 @@
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
       isJumping: false, 
-      bubblesLeft: 5, // 버블 개수 3개 -> 5개로 되돌림
-      maxBubbles: 5,  // 최대 버블 개수 3개 -> 5개로 되돌림
+      bubblesLeft: 5, 
+      maxBubbles: 5, 
       bubbleJumpPower: -12,
-      lives: 5 
+      lives: 5,
+      isSuperBaby: false, // 슈퍼아기 상태 여부 추가
+      superBabyTimer: 0,   // 슈퍼아기 남은 시간 추가
+      superBabyDuration: 8000 // 슈퍼아기 지속 시간 8초 (예시. 필요시 조정)
     };
-    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [];
+    // diapers 배열 추가
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = []; 
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
-        { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false },
-        { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true } 
+        { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: true }, // 5단계에 기저귀 추가
+        { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        // 11 스테이지부터 모든 스테이지에 하트 배치
+        { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false } 
     ];
 
     const startButton = document.getElementById('startButton');
@@ -385,6 +393,7 @@
     function generateLevel() {
       platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
       hearts.length = 0; 
+      diapers.length = 0; // 기저귀 배열 초기화 추가
       
       const config = stageConfigs[currentStage - 1];
       if (!config) return;
@@ -481,6 +490,20 @@
               });
           }
       }
+
+      // 기저귀 아이템 배치 로직 추가 (5단계에서만)
+      if (config.diaper && currentStage === 5) {
+          const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
+          if (suitablePlatforms.length > 0) {
+              const diaperPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
+              diapers.push({
+                  x: diaperPlatform.x + diaperPlatform.width / 2 - 20, 
+                  y: diaperPlatform.y - 40, 
+                  width: 30, height: 30, 
+                  collected: false
+              });
+          }
+      }
       
       const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
       goal.x = topPlatform.x + (topPlatform.width / 2) - (goal.width / 2);
@@ -498,8 +521,10 @@
 
       gameStarted = true; score = 0; currentStage = 1; 
       baby.lives = 5; 
-      baby.bubblesLeft = baby.maxBubbles; // 버블 초기화
-      lastBubbleRechargeTime = 0; // 버블 재충전 타이머 초기화
+      baby.bubblesLeft = baby.maxBubbles; 
+      lastBubbleRechargeTime = 0; 
+      baby.isSuperBaby = false; // 슈퍼아기 상태 초기화
+      baby.superBabyTimer = 0;   // 슈퍼아기 타이머 초기화
 
       generateLevel(); 
       resetPlayerPosition(); 
@@ -528,11 +553,17 @@
         baby.y = worldHeight - 80; 
         baby.dy = 0; 
         camera.y = worldHeight - canvas.height; 
-        baby.bubblesLeft = baby.maxBubbles; // 버블 다시 풀로 채움
-        lastBubbleRechargeTime = 0; // 버블 재충전 타이머 초기화
+        baby.bubblesLeft = baby.maxBubbles; 
+        lastBubbleRechargeTime = 0; 
+        baby.isSuperBaby = false; // 슈퍼아기 상태 초기화
+        baby.superBabyTimer = 0;   // 슈퍼아기 타이머 초기화
     }
 
     function handleLoseLife() {
+        // 슈퍼아기 상태에서는 생명을 잃지 않음
+        if (baby.isSuperBaby) {
+            return; 
+        }
         baby.lives--;
         if (baby.lives <= 0) {
             showGameOver();
@@ -615,27 +646,54 @@
       ctx.save();
       ctx.translate(0, -camera.y);
 
+      // 슈퍼아기 상태일 때 필터 적용
+      if (baby.isSuperBaby) {
+          // hue-rotate 값을 시간에 따라 변경하여 반짝이는 효과
+          const hueRotate = (lastTime / 10) % 360; 
+          ctx.filter = `hue-rotate(${hueRotate}deg) saturate(200%) brightness(150%)`;
+      } else {
+          ctx.filter = 'none'; // 기본 필터로 되돌림
+      }
+
+
       ctx.fillStyle = '#d0f4f7';
       ctx.fillRect(0, 0, canvas.width, worldHeight);
 
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
       
-      ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)';
+      ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)'; // 목표물 필터는 별도 적용
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
-      ctx.filter = 'none';
       
+      // 적 그리기
       enemies.forEach(e => {
         ctx.drawImage(e.image, e.x, e.y, e.width, e.height);
       });
 
+      // 하트 그리기
       hearts.forEach(h => {
           if (!h.collected) { 
               ctx.drawImage(heartImg, h.x, h.y, h.width, h.height);
           }
       });
 
-      ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
+      // 기저귀 그리기
+      diapers.forEach(d => {
+          if (!d.collected) {
+              ctx.drawImage(diaperImg, d.x, d.y, d.width, d.height);
+          }
+      });
+
+
+      // 슈퍼아기 상태에 따라 다른 아기 이미지 그리기
+      if (baby.isSuperBaby) {
+          ctx.drawImage(superbabyImg, baby.x, baby.y, baby.width, baby.height);
+      } else {
+          ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
+      }
       
+      // 필터 초기화 (플레이어에게만 적용된 필터가 다른 요소에 영향 주지 않도록)
+      ctx.filter = 'none'; 
+
       playerBubbles.forEach((b, index) => {
         b.y += 2; b.radius *= 0.95; b.life--;
         ctx.globalAlpha = b.life / 30;
@@ -678,16 +736,22 @@
       if (stageTimer <= 0) { handleLoseLife(); }
 
       // 버블 재충전 로직
-      // 버블이 최대치가 아닐 경우에만 재충전 타이머 작동
       if (baby.bubblesLeft < baby.maxBubbles) {
           if (time - lastBubbleRechargeTime > BUBBLE_RECHARGE_INTERVAL) {
               baby.bubblesLeft++;
-              lastBubbleRechargeTime = time; // 버블 재충전 시 타이머 리셋
+              lastBubbleRechargeTime = time; 
           }
       } else {
-          // 버블이 최대치일 때는 재충전 타이머를 현재 시간으로 계속 업데이트하여
-          // 버블을 사용한 순간부터 5초가 카운트되도록 합니다.
           lastBubbleRechargeTime = time; 
+      }
+
+      // 슈퍼아기 타이머 업데이트
+      if (baby.isSuperBaby) {
+          baby.superBabyTimer -= deltaTime * 1000; // 밀리초 단위로 감소
+          if (baby.superBabyTimer <= 0) {
+              baby.isSuperBaby = false; // 슈퍼아기 상태 해제
+              baby.superBabyTimer = 0;
+          }
       }
 
       baby.x += baby.dx; 
@@ -722,7 +786,20 @@
           }
       });
 
-      enemies.forEach(e => {
+      // 기저귀 아이템 충돌 처리
+      diapers.forEach((d, index) => {
+          if (!d.collected &&
+              baby.x < d.x + d.width && baby.x + baby.width > d.x &&
+              baby.y < d.y + d.height && baby.y + baby.height > d.y) {
+              baby.isSuperBaby = true; // 슈퍼아기 상태 활성화
+              baby.superBabyTimer = baby.superBabyDuration; // 타이머 시작
+              d.collected = true; // 기저귀 획득
+              // diapers.splice(index, 1); // 즉시 제거하지 않고 collected 플래그로 관리
+          }
+      });
+
+
+      enemies.forEach((e, index) => { // 적 배열 순회시 index도 받도록 수정
         switch(e.type) {
             case 'normal': 
             case 'fast':
@@ -761,9 +838,14 @@
                 break;
         }
 
+        // 플레이어와 적 충돌
         if (baby.x < e.x + e.width && baby.x + baby.width > e.x &&
             baby.y < e.y + e.height && baby.y + baby.height > e.y) {
-            handleLoseLife();
+            if (baby.isSuperBaby) {
+                enemies.splice(index, 1); // 슈퍼아기 상태에서는 적 제거 (죽는 효과)
+            } else {
+                handleLoseLife(); // 일반 상태에서는 생명 감소
+            }
         }
       });
 
@@ -777,10 +859,13 @@
               return;
           }
 
+          // 플레이어와 적 버블 충돌 (슈퍼아기 상태에서는 무적)
           if (baby.x < b.x + b.radius && baby.x + baby.width > b.x - b.radius &&
               baby.y < b.y + b.radius && baby.y + baby.height > b.y - b.radius) {
-              handleLoseLife();
-              enemyBubbles.splice(index, 1);
+              if (!baby.isSuperBaby) { // 슈퍼아기 상태가 아닐 때만 데미지
+                 handleLoseLife();
+              }
+              enemyBubbles.splice(index, 1); // 충돌한 버블 제거 (무적 상태에서도 버블은 사라짐)
           }
       });
 
@@ -858,7 +943,7 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg];
+    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg, diaperImg, superbabyImg]; // 새로운 이미지 추가
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
