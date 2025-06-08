@@ -109,10 +109,12 @@
     }
     #actionBtns {
         display: flex;
-        gap: 20px; /* 액션 버튼 간 간격 유지 */
+        flex-direction: column; /* 액션 버튼들을 세로로 정렬 */
+        align-items: center; /* 가운데 정렬 */
+        gap: 10px; /* 액션 버튼 간 간격 유지 */
     }
 
-    #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn {
+    #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn, #shootBtn { /* shootBtn 추가 */
         width: 70px;
         height: 70px;
         background-color: rgba(255, 159, 28, 0.7);
@@ -125,6 +127,14 @@
         border-radius: 50%;
         border: 3px solid rgba(230, 138, 0, 0.9);
         box-shadow: 0 4px rgba(230, 138, 0, 0.9);
+    }
+    /* 버튼 내부 이미지 스타일 */
+    #mobileControls img {
+        width: 100%; /* 버튼 크기에 맞춰 이미지 채우기 */
+        height: 100%;
+        object-fit: contain; /* 이미지 비율 유지하며 버튼 안에 맞추기 */
+        padding: 5px; /* 이미지와 버튼 테두리 사이에 약간의 여백 */
+        box-sizing: border-box;
     }
 
 
@@ -216,7 +226,7 @@
       <div id="livesDisplay"></div> 
       <div id="timerDisplay">⏰ 20</div>
       <div id="bubbleGauge"></div>
-    </div>
+      <div id="pacifierDisplay">🍼 0</div> </div>
   </div>
 
   <canvas id="gameCanvas"></canvas>
@@ -228,7 +238,7 @@
       <div id="rightBtn">→</div>
     </div>
     <div id="actionBtns">
-      <div id="bubbleJumpBtn">BUBBLE</div>
+      <div id="shootBtn">SHOOT</div> <div id="bubbleJumpBtn">BUBBLE</div>
       <div id="jumpBtn">JUMP</div>
     </div>
   </div>
@@ -260,9 +270,9 @@
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
-    // 새로운 이미지 추가: 기저귀, 슈퍼아기
     const diaperImg = new Image(); diaperImg.src = "./diaper.png";
-    const superbabyImg = new Image(); superbabyImg.src = "./superbaby.png";
+    // superbaby.png는 사용하지 않으므로 제거합니다.
+    const pacifierProjectileImg = new Image(); pacifierProjectileImg.src = "./pacifier.png"; // 쪽쪽이 총알 이미지 추가
 
 
     const bgm = document.getElementById('bgm');
@@ -285,12 +295,14 @@
       maxBubbles: 5, 
       bubbleJumpPower: -12,
       lives: 5,
-      isSuperBaby: false, // 슈퍼아기 상태 여부 추가
-      superBabyTimer: 0,   // 슈퍼아기 남은 시간 추가
-      superBabyDuration: 8000 // 슈퍼아기 지속 시간 8초 (예시. 필요시 조정)
+      // 슈퍼아기 관련 속성 제거
+      pacifiersLeft: 0,   // 남은 쪽쪽이 개수
+      maxPacifiers: 50,  // 최대 쪽쪽이 개수
+      lastShotTime: 0,    // 총 발사 쿨다운용 (선택 사항)
+      shootCoolDown: 200  // 총 발사 쿨다운 (0.2초)
     };
-    // diapers 배열 추가
-    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = []; 
+    // pacifiers 배열 추가
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = [], pacifiers = []; 
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
@@ -298,21 +310,21 @@
         { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
         { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
         { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: true }, // 5단계에 기저귀 추가
+        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false }, // 5단계 기저귀 제거
         { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
         { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
+        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: true }, // 8단계에 기저귀 추가
         { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
         { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
         // 11 스테이지부터 모든 스테이지에 하트 배치
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
         { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: true }, // 13단계에 기저귀 추가
         { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
         { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
         { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
         { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: true }, // 18단계에 기저귀 추가
         { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
         { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false } 
     ];
@@ -332,6 +344,7 @@
     const rankingListGO = document.getElementById('rankingListGO');
     const orientationAlert = document.getElementById('orientation-alert');
     const finalScoreGO = document.getElementById('finalScoreGO');
+    const pacifierDisplay = document.getElementById('pacifierDisplay'); // 쪽쪽이 개수 표시 UI 요소
 
     function enterFullscreen() {
         const elem = document.documentElement;
@@ -352,6 +365,9 @@
             document.getElementById('uiLayer').style.display = 'none';
             document.getElementById('bubbleGauge').style.display = 'none';
             document.getElementById('mobileControls').style.display = 'none';
+            // pacifierDisplay도 숨기기
+            if (pacifierDisplay) pacifierDisplay.style.display = 'none';
+
             startScreen.style.display = 'none';
             winScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
@@ -366,6 +382,7 @@
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
                 document.getElementById('bubbleGauge').style.display = 'flex';
+                if (pacifierDisplay) pacifierDisplay.style.display = 'block'; // 게임 중일 때 보이게
                 setupMobileControls();
                 update();
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
@@ -376,6 +393,7 @@
                 document.getElementById('uiLayer').style.display = 'none';
                 document.getElementById('bubbleGauge').style.display = 'none';
                 document.getElementById('mobileControls').style.display = 'none';
+                if (pacifierDisplay) pacifierDisplay.style.display = 'none'; // 게임 시작 전에는 숨기기
 
                 if (gameOverScreen.style.display !== 'none') {
                     gameOverScreen.style.display = 'flex';
@@ -393,7 +411,8 @@
     function generateLevel() {
       platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
       hearts.length = 0; 
-      diapers.length = 0; // 기저귀 배열 초기화 추가
+      diapers.length = 0; 
+      pacifiers.length = 0; // 쪽쪽이 총알 배열 초기화 추가
       
       const config = stageConfigs[currentStage - 1];
       if (!config) return;
@@ -491,8 +510,8 @@
           }
       }
 
-      // 기저귀 아이템 배치 로직 추가 (5단계에서만)
-      if (config.diaper && currentStage === 5) {
+      // 기저귀 아이템 배치 로직 (8, 13, 18단계에서만)
+      if (config.diaper && (currentStage === 8 || currentStage === 13 || currentStage === 18)) {
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
               const diaperPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
@@ -517,14 +536,17 @@
       document.getElementById('gameCanvas').style.display = 'block';
       document.getElementById('uiLayer').style.display = 'flex';
       document.getElementById('bubbleGauge').style.display = 'flex';
+      // pacifierDisplay 보이게
+      if (pacifierDisplay) pacifierDisplay.style.display = 'block';
+
       setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; 
       baby.lives = 5; 
       baby.bubblesLeft = baby.maxBubbles; 
       lastBubbleRechargeTime = 0; 
-      baby.isSuperBaby = false; // 슈퍼아기 상태 초기화
-      baby.superBabyTimer = 0;   // 슈퍼아기 타이머 초기화
+      baby.pacifiersLeft = 0; // 쪽쪽이 개수 초기화
+      baby.lastShotTime = 0; // 총 발사 쿨다운 초기화
 
       generateLevel(); 
       resetPlayerPosition(); 
@@ -555,15 +577,11 @@
         camera.y = worldHeight - canvas.height; 
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
-        baby.isSuperBaby = false; // 슈퍼아기 상태 초기화
-        baby.superBabyTimer = 0;   // 슈퍼아기 타이머 초기화
+        baby.pacifiersLeft = 0; // 쪽쪽이 개수 초기화
+        baby.lastShotTime = 0;    // 총 발사 쿨다운 초기화
     }
 
     function handleLoseLife() {
-        // 슈퍼아기 상태에서는 생명을 잃지 않음
-        if (baby.isSuperBaby) {
-            return; 
-        }
         baby.lives--;
         if (baby.lives <= 0) {
             showGameOver();
@@ -591,6 +609,7 @@
         document.getElementById('uiLayer').style.display = 'none';
         document.getElementById('bubbleGauge').style.display = 'none';
         document.getElementById('mobileControls').style.display = 'none';
+        if (pacifierDisplay) pacifierDisplay.style.display = 'none'; // 게임 오버 시 숨기기
 
         finalScoreGO.textContent = score;
 
@@ -627,6 +646,7 @@
         document.getElementById('uiLayer').style.display = 'none';
         document.getElementById('bubbleGauge').style.display = 'none';
         document.getElementById('mobileControls').style.display = 'none';
+        if (pacifierDisplay) pacifierDisplay.style.display = 'none'; // 승리 시 숨기기
 
         const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
         updateAndShowRanking(playerName || "Guest", rankingList);
@@ -641,28 +661,41 @@
       }
     }
 
+    // 쪽쪽이 발사 함수 추가
+    function shootPacifier() {
+        if (baby.pacifiersLeft > 0 && gameStarted && (lastTime - baby.lastShotTime > baby.shootCoolDown)) {
+            baby.pacifiersLeft--;
+            // 쪽쪽이 발사 위치 (아기 캐릭터 중앙 상단)
+            pacifiers.push({ 
+                x: baby.x + baby.width / 2 - 10, // 쪽쪽이 너비의 절반만큼 왼쪽으로 이동
+                y: baby.y, 
+                width: 20, height: 20, // 쪽쪽이 크기
+                dy: -10, // 위로 발사되는 속도
+                life: 90 // 쪽쪽이 수명 (프레임 단위)
+            });
+            baby.lastShotTime = lastTime; // 마지막 발사 시간 업데이트
+        }
+    }
+
+
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(0, -camera.y);
 
-      // 슈퍼아기 상태일 때 필터 적용
-      if (baby.isSuperBaby) {
-          // hue-rotate 값을 시간에 따라 변경하여 반짝이는 효과
-          const hueRotate = (lastTime / 10) % 360; 
-          ctx.filter = `hue-rotate(${hueRotate}deg) saturate(200%) brightness(150%)`;
-      } else {
-          ctx.filter = 'none'; // 기본 필터로 되돌림
-      }
-
+      // 슈퍼아기 상태 필터 제거
+      ctx.filter = 'none'; 
 
       ctx.fillStyle = '#d0f4f7';
       ctx.fillRect(0, 0, canvas.width, worldHeight);
 
       platforms.forEach(p => ctx.drawImage(platformImg, p.x, p.y, p.width, 20));
       
-      ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)'; // 목표물 필터는 별도 적용
+      ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)'; 
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
+      
+      // 필터 초기화
+      ctx.filter = 'none'; 
       
       // 적 그리기
       enemies.forEach(e => {
@@ -683,17 +716,9 @@
           }
       });
 
-
-      // 슈퍼아기 상태에 따라 다른 아기 이미지 그리기
-      if (baby.isSuperBaby) {
-          ctx.drawImage(superbabyImg, baby.x, baby.y, baby.width, baby.height);
-      } else {
-          ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
-      }
+      // 아기 이미지 그리기 (슈퍼아기 변신 로직 제거)
+      ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
       
-      // 필터 초기화 (플레이어에게만 적용된 필터가 다른 요소에 영향 주지 않도록)
-      ctx.filter = 'none'; 
-
       playerBubbles.forEach((b, index) => {
         b.y += 2; b.radius *= 0.95; b.life--;
         ctx.globalAlpha = b.life / 30;
@@ -708,6 +733,12 @@
         ctx.globalAlpha = b.life / 60;
         ctx.drawImage(bubbleImg, b.x - b.radius, b.y - b.radius, b.radius * 2, b.radius * 2);
         if (b.life <= 0) enemyBubbles.splice(index, 1);
+      });
+
+      // 쪽쪽이 총알 그리기
+      pacifiers.forEach((p, index) => {
+          ctx.drawImage(pacifierProjectileImg, p.x, p.y, p.width, p.height);
+          if (p.life <= 0) pacifiers.splice(index, 1);
       });
 
       ctx.globalAlpha = 1;
@@ -727,6 +758,7 @@
             if (i >= baby.bubblesLeft) img.classList.add('empty');
             bubbleGauge.appendChild(img);
         }
+        pacifierDisplay.textContent = `🍼 ${baby.pacifiersLeft}`; // 쪽쪽이 개수 UI 업데이트
     }
 
     function update(time = 0) {
@@ -744,16 +776,7 @@
       } else {
           lastBubbleRechargeTime = time; 
       }
-
-      // 슈퍼아기 타이머 업데이트
-      if (baby.isSuperBaby) {
-          baby.superBabyTimer -= deltaTime * 1000; // 밀리초 단위로 감소
-          if (baby.superBabyTimer <= 0) {
-              baby.isSuperBaby = false; // 슈퍼아기 상태 해제
-              baby.superBabyTimer = 0;
-          }
-      }
-
+      
       baby.x += baby.dx; 
       baby.dy += baby.gravity; 
       baby.y += baby.dy;
@@ -786,20 +809,41 @@
           }
       });
 
-      // 기저귀 아이템 충돌 처리
+      // 기저귀 아이템 충돌 처리 (쪽쪽이 충전)
       diapers.forEach((d, index) => {
           if (!d.collected &&
               baby.x < d.x + d.width && baby.x + baby.width > d.x &&
               baby.y < d.y + d.height && baby.y + baby.height > d.y) {
-              baby.isSuperBaby = true; // 슈퍼아기 상태 활성화
-              baby.superBabyTimer = baby.superBabyDuration; // 타이머 시작
-              d.collected = true; // 기저귀 획득
-              // diapers.splice(index, 1); // 즉시 제거하지 않고 collected 플래그로 관리
+              baby.pacifiersLeft = Math.min(baby.maxPacifiers, baby.pacifiersLeft + 20); // 20개 충전, 최대 50개 제한
+              d.collected = true; 
           }
       });
 
+      // 쪽쪽이 총알 업데이트
+      pacifiers.forEach((p, pIndex) => {
+          p.y += p.dy; // 위로 이동
+          p.life--;
 
-      enemies.forEach((e, index) => { // 적 배열 순회시 index도 받도록 수정
+          // 화면 밖으로 나가면 제거
+          if (p.y + p.height < 0 || p.life <= 0) {
+              pacifiers.splice(pIndex, 1);
+              return;
+          }
+
+          // 쪽쪽이와 적 충돌 감지
+          enemies.forEach((e, eIndex) => {
+              if (p.x < e.x + e.width && p.x + p.width > e.x &&
+                  p.y < e.y + e.height && p.y + p.height > e.y) {
+                  enemies.splice(eIndex, 1); // 적 제거
+                  pacifiers.splice(pIndex, 1); // 쪽쪽이 제거
+                  score += 20; // 적 처치 시 점수 획득 (예시: 20점)
+                  return; // 현재 쪽쪽이 제거 후 다음으로 넘어감
+              }
+          });
+      });
+
+
+      enemies.forEach((e, index) => { 
         switch(e.type) {
             case 'normal': 
             case 'fast':
@@ -838,14 +882,10 @@
                 break;
         }
 
-        // 플레이어와 적 충돌
+        // 플레이어와 적 충돌 (슈퍼아기 무적 기능 제거)
         if (baby.x < e.x + e.width && baby.x + baby.width > e.x &&
             baby.y < e.y + e.height && baby.y + baby.height > e.y) {
-            if (baby.isSuperBaby) {
-                enemies.splice(index, 1); // 슈퍼아기 상태에서는 적 제거 (죽는 효과)
-            } else {
-                handleLoseLife(); // 일반 상태에서는 생명 감소
-            }
+            handleLoseLife(); 
         }
       });
 
@@ -859,13 +899,11 @@
               return;
           }
 
-          // 플레이어와 적 버블 충돌 (슈퍼아기 상태에서는 무적)
+          // 플레이어와 적 버블 충돌 (슈퍼아기 무적 기능 제거)
           if (baby.x < b.x + b.radius && baby.x + baby.width > b.x - b.radius &&
               baby.y < b.y + b.radius && baby.y + baby.height > b.y - b.radius) {
-              if (!baby.isSuperBaby) { // 슈퍼아기 상태가 아닐 때만 데미지
-                 handleLoseLife();
-              }
-              enemyBubbles.splice(index, 1); // 충돌한 버블 제거 (무적 상태에서도 버블은 사라짐)
+              handleLoseLife();
+              enemyBubbles.splice(index, 1);
           }
       });
 
@@ -904,20 +942,25 @@
         const rightBtn = document.getElementById('rightBtn');
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
+        const shootBtn = document.getElementById('shootBtn'); // 새로운 발사 버튼
 
+        // 기존 이벤트 리스너 제거 (중복 등록 방지)
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
         leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
         rightBtn.removeEventListener('touchstart', handleRightTouchStart);
         rightBtn.removeEventListener('touchend', handleRightTouchEnd);
         jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
         bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
+        if (shootBtn) shootBtn.removeEventListener('touchstart', handleShootTouchStart); // 새로운 버튼 이벤트 리스너 제거
 
+        // 새로운 이벤트 리스너 등록
         leftBtn.addEventListener('touchstart', handleLeftTouchStart);
         leftBtn.addEventListener('touchend', handleLeftTouchEnd);
         rightBtn.addEventListener('touchstart', handleRightTouchStart);
         rightBtn.addEventListener('touchend', handleRightTouchEnd);
         jumpBtn.addEventListener('touchstart', handleJumpTouchStart);
         bubbleJumpBtn.addEventListener('touchstart', handleBubbleJumpTouchStart);
+        if (shootBtn) shootBtn.addEventListener('touchstart', handleShootTouchStart); // 새로운 버튼 이벤트 리스너 등록
     }
 
     function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = -baby.speed; }
@@ -926,7 +969,7 @@
     function handleRightTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
     function handleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && !baby.isJumping && window.innerWidth > window.innerHeight) { baby.dy = baby.jumpPower; baby.isJumping = true; } }
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
-
+    function handleShootTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) shootPacifier(); } // 총 발사 터치 이벤트
 
     setupMobileControls();
 
@@ -938,12 +981,19 @@
         baby.dy = baby.jumpPower; baby.isJumping = true;
       }
       if (e.key === ' ') { e.preventDefault(); bubbleJump(); }
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') { // 'w' 또는 'ArrowUp' 키로 총 발사
+        e.preventDefault(); 
+        shootPacifier();
+      }
     });
     document.addEventListener('keyup', e => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg, diaperImg, superbabyImg]; // 새로운 이미지 추가
+    const allGameImages = [
+        babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg, diaperImg, 
+        pacifierProjectileImg // superbabyImg 제거, pacifierProjectileImg 추가
+    ];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
