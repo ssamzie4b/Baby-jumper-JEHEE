@@ -378,7 +378,6 @@
     window.addEventListener('resize', checkOrientation);
 
     function generateLevel() {
-      // 새 스테이지 진입 시에만 맵 초기화
       platforms.length = 0; 
       enemies.length = 0; 
       enemyBubbles.length = 0; 
@@ -525,8 +524,6 @@
         baby.dy = 0; 
         camera.y = worldHeight - canvas.height; 
         baby.bubblesLeft = baby.maxBubbles;
-        // 사망 시 맵 초기화 방지: 적과 버블, 하트 배열을 초기화하지 않습니다.
-        // generateLevel()도 호출하지 않습니다.
     }
 
     function handleLoseLife() {
@@ -535,9 +532,6 @@
             showGameOver();
         } else {
             resetPlayerPosition();
-            // 플레이어가 죽었을 때 적들이나 버블들이 사라져야 한다면 이곳에서 초기화 로직 추가
-            // 예: enemies.length = 0; enemyBubbles.length = 0; (적, 버블 초기화)
-            // 현재 요구사항은 "맵 변화 없음"이므로 적 위치는 그대로 둡니다.
         }
     }
 
@@ -571,9 +565,14 @@
     function advanceToNextStage() {
         score += Math.ceil(stageTimer * 10);
 
-        if (currentStage === totalStages) {
+        // 특정 스테이지 클리어 보너스 추가
+        if (currentStage === 10) {
             score += 300;
-            score += baby.lives * 100;
+        } else if (currentStage === 15) {
+            score += 300;
+        } else if (currentStage === totalStages) { // 20 스테이지 클리어 시
+            score += 500; // 500점으로 변경
+            score += baby.lives * 100; // 남은 목숨 보너스 유지
         }
 
         currentStage++;
@@ -624,7 +623,6 @@
         ctx.drawImage(e.image, e.x, e.y, e.width, e.height);
       });
 
-      // 하트 그리기
       hearts.forEach(h => {
           if (!h.collected) { 
               ctx.drawImage(heartImg, h.x, h.y, h.width, h.height);
@@ -698,7 +696,6 @@
         });
       }
 
-      // 하트 아이템 충돌 처리
       hearts.forEach((h, index) => {
           if (!h.collected && 
               baby.x < h.x + h.width && baby.x + baby.width > h.x &&
