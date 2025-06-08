@@ -259,28 +259,30 @@
     const bubbleImg = new Image(); bubbleImg.src = "./bubble.png";
     const goalImg = new Image(); goalImg.src = "./milk.png";
     const dragonImg = new Image(); dragonImg.src = "./dragon.png";
+    // 새로운 적 이미지 추가
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
-    const heartImg = new Image(); heartImg.src = "./heart.png";
+    const heartImg = new Image(); heartImg.src = "./heart.png"; // 하트 이미지 추가
 
     const bgm = document.getElementById('bgm');
 
     let gameStarted = false, score = 0;
     let currentStage = 1;
-    const totalStages = 20;
+    const totalStages = 20; // 총 스테이지 수 20으로 변경
     let stageTimer = 20;
     let lastTime = 0, deltaTime = 0;
 
     const baby = {
-      x: canvas.width / 2 - 25, y: worldHeight - 80,
+      x: canvas.width / 2 - 25, y: worldHeight - 80, // 초기 worldHeight는 현재 스테이지에 따라 결정
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
       isJumping: false, bubblesLeft: 5, maxBubbles: 5, bubbleJumpPower: -12,
-      lives: 5 
+      lives: 5 // 목숨 3개 -> 5개로 변경
     };
-    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [];
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = []; // hearts 배열 추가
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
+    // 스테이지 설정 업데이트: totalStages를 20으로 늘리고, redDragon, goldDragon, timer, heart 속성 추가
     const stageConfigs = [
         { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
         { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
@@ -292,16 +294,17 @@
         { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
         { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
         { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20 },
+        // 11 스테이지부터 추가 설정 및 모든 스테이지에 하트 배치
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
         { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
-        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30 },
-        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30 }
+        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true },
+        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true } // 골드 드래곤 최종 보스
     ];
 
     const startButton = document.getElementById('startButton');
@@ -378,34 +381,35 @@
     window.addEventListener('resize', checkOrientation);
 
     function generateLevel() {
-      platforms.length = 0; 
-      enemies.length = 0; 
-      enemyBubbles.length = 0; 
-      hearts.length = 0; 
-
+      platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
+      hearts.length = 0; // 하트 배열 초기화 추가
+      
       const config = stageConfigs[currentStage - 1];
       if (!config) return;
 
+      // 스테이지 길이에 따라 worldHeight 설정
       worldHeight = canvas.height * 2 * config.lengthMultiplier;
-      camera.y = worldHeight - canvas.height; 
+      camera.y = worldHeight - canvas.height; // 카메라 초기 위치 재설정
 
+      // 바닥 플랫폼 추가
       platforms.push({ x: 0, y: worldHeight - 20, width: canvas.width });
       
       let currentY = worldHeight - 100;
-      while (currentY > 100 + (worldHeight - canvas.height * 2) / 2) {
+      // 스테이지 길이에 비례하여 플랫폼 생성
+      while (currentY > 100 + (worldHeight - canvas.height * 2) / 2) { 
         let pWidth = 100 + Math.random() * 50;
         let pX = Math.random() * (canvas.width - pWidth);
         platforms.push({ x: pX, y: currentY, width: pWidth });
-        currentY -= 70 + Math.random() * 50;
+        currentY -= 70 + Math.random() * 50; // 플랫폼 간격
       }
 
-      const spawnPlatforms = [...platforms].slice(1);
+      const spawnPlatforms = [...platforms].slice(1); // 바닥 플랫폼 제외
       spawnPlatforms.sort(() => 0.5 - Math.random());
       let platformIndex = 0;
 
       const createEnemy = (type, isBoss = false) => {
           let platform;
-          if (isBoss) { 
+          if (isBoss) { // 보스는 최상단 플랫폼 근처에 배치
               const topPlatform = platforms.reduce((prev, curr) => (curr.y < prev.y ? curr : prev), platforms[0]);
               let bossPlatform = platforms.find(p => p.y < 200 && p.width > 150); 
               if (!bossPlatform) { 
@@ -413,7 +417,7 @@
                   platforms.push(bossPlatform);
               }
               platform = bossPlatform;
-          } else { 
+          } else { // 일반 적은 랜덤 플랫폼
               if (spawnPlatforms.length === 0) return;
               platform = spawnPlatforms[platformIndex % spawnPlatforms.length];
               platformIndex++;
@@ -424,21 +428,22 @@
           let enemySpeed = 1 + Math.random() * currentStage * 0.15;
           let jumpPower = -7 - Math.random() * 2;
           let image = dragonImg;
-          let shootInterval = 0;
+          let shootInterval = 0; // 버블 발사 간격
 
           if (type === 'fast') { enemySpeed *= 2; }
           if (type === 'jumper') { enemySpeed = 0; }
           if (type === 'redDragon') { 
             image = redDragonImg; 
-            shootInterval = 1000 + Math.random() * 1500;
+            shootInterval = 1000 + Math.random() * 1500; // 1~2.5초마다 버블 발사
           }
           if (type === 'goldDragon') {
             image = goldDragonImg;
-            enemyWidth *= 2;
-            enemyHeight *= 2;
-            enemySpeed = 1; 
-            shootInterval = 800 + Math.random() * 1200;
+            enemyWidth *= 2; // 가로 2배
+            enemyHeight *= 2; // 세로 2배
+            enemySpeed = 1; // 일반 스피드 유지
+            shootInterval = 800 + Math.random() * 1200; // 0.8~2초마다 버블 발사
           }
+
 
           enemies.push({
               x: platform.x + platform.width / 2 - enemyWidth / 2, 
@@ -457,23 +462,26 @@
           });
       };
 
+      // 스테이지 설정에 따라 적 생성
       for(let i=0; i<config.normal; i++) createEnemy('normal');
       for(let i=0; i<config.fast; i++) createEnemy('fast');
       for(let i=0; i<config.jumper; i++) createEnemy('jumper');
       for(let i=0; i<config.redDragon; i++) createEnemy('redDragon');
-      
+      // 골드 드래곤은 20스테이지에서만, 그리고 하나만 생성
       if (config.goldDragon > 0 && currentStage === 20) {
-          createEnemy('goldDragon', true);
+          createEnemy('goldDragon', true); // isBoss = true
       }
 
+      // 하트 아이템 배치 로직 추가
       if (config.heart) {
+          // 하트를 놓을 만한 적절한 플랫폼 찾기 (바닥 제외, 너무 높지 않은)
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
               const heartPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
               hearts.push({
-                  x: heartPlatform.x + heartPlatform.width / 2 - 20, 
-                  y: heartPlatform.y - 40, 
-                  width: 30, height: 30, 
+                  x: heartPlatform.x + heartPlatform.width / 2 - 20, // 하트 크기 고려
+                  y: heartPlatform.y - 40, // 플랫폼 위
+                  width: 30, height: 30, // 하트 이미지 크기
                   collected: false
               });
           }
@@ -494,13 +502,15 @@
       setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; 
-      baby.lives = 5; 
+      baby.lives = 5; // 게임 시작 시 목숨 초기화 (5개)
 
-      generateLevel(); 
+      generateLevel(); // 첫 스테이지 맵 생성
       resetPlayerPosition(); 
       bgm.currentTime = 0; 
       bgm.play().catch(e => {
         console.log("BGM 재생 오류:", e);
+        // 사용자 제스처 없이 자동 재생이 막힐 경우를 대비한 안내
+        // alert("음악 재생이 브라우저 설정에 의해 차단될 수 있습니다. 화면을 한 번 클릭하여 재생을 시도해주세요.");
       });
       update();
       enterFullscreen();
@@ -510,20 +520,24 @@
     restartButtonGO.addEventListener('click', startGame);
 
     function resetPlayerPosition() {
+        // 스테이지 타이머 설정 (11스테이지부터 30초)
         const config = stageConfigs[currentStage - 1];
         stageTimer = config ? config.timer : 20;
         
+        // 현재 스테이지에 맞는 worldHeight 설정
         if (config) {
             worldHeight = canvas.height * 2 * config.lengthMultiplier;
         } else {
-            worldHeight = canvas.height * 2; 
+            worldHeight = canvas.height * 2; // 기본값
         }
 
         baby.x = canvas.width / 2 - 25; 
-        baby.y = worldHeight - 80; 
+        baby.y = worldHeight - 80; // 재설정된 worldHeight에 맞춰 플레이어 위치 조정
         baby.dy = 0; 
-        camera.y = worldHeight - canvas.height; 
+        camera.y = worldHeight - canvas.height; // 카메라 위치도 재설정
         baby.bubblesLeft = baby.maxBubbles;
+        // 사망 시 맵 초기화 방지: enemies, enemyBubbles, hearts, platforms 배열을 초기화하지 않습니다.
+        // generateLevel()도 호출하지 않습니다.
     }
 
     function handleLoseLife() {
@@ -532,6 +546,9 @@
             showGameOver();
         } else {
             resetPlayerPosition();
+            // 플레이어가 죽었을 때 적들이나 버블들이 사라져야 한다면 이곳에서 초기화 로직 추가
+            // 예: enemies.forEach(e => { /* 적 초기 위치로 돌리거나 */ });
+            // 현재 요구사항은 "맵 변화 없음"이므로 적 위치는 그대로 둡니다.
         }
     }
 
@@ -565,7 +582,6 @@
     function advanceToNextStage() {
         score += Math.ceil(stageTimer * 10);
 
-        // 특정 스테이지 클리어 보너스 추가
         if (currentStage === 10) {
             score += 300;
         } else if (currentStage === 15) {
@@ -579,8 +595,8 @@
         if (currentStage > totalStages) {
             showWinScreen();
         } else {
-            generateLevel(); 
-            resetPlayerPosition(); 
+            generateLevel(); // 새 스테이지 진입 시에만 맵 생성
+            resetPlayerPosition(); // 플레이어 위치, 타이머, 버블 등 초기화
         }
     }
 
@@ -654,7 +670,6 @@
     function drawUI() {
         stageDisplay.textContent = `Stage ${currentStage} / ${totalStages}`;
         scoreText.textContent = `Score: ${score}`;
-        // 목숨 표시 수정: baby.lives - 1로 표시
         livesDisplay.textContent = '❤️ ' + Math.max(0, baby.lives - 1); 
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         bubbleGauge.innerHTML = '';
@@ -783,6 +798,7 @@
       requestAnimationFrame(update);
     }
 
+    // [모바일] 터치 컨트롤러 로직
     function setupMobileControls() {
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const mobileControlsDiv = document.getElementById('mobileControls');
@@ -790,6 +806,7 @@
             mobileControlsDiv.style.display = 'none';
             return;
         }
+        // 가로 모드일 때만 표시
         if (window.innerWidth < window.innerHeight) {
             mobileControlsDiv.style.display = 'none';
         } else {
@@ -800,6 +817,24 @@
         const rightBtn = document.getElementById('rightBtn');
         const jumpBtn = document.getElementById('jumpBtn');
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
+
+        // 이전에 텍스트가 있던 부분에 이미지로 교체합니다.
+        leftBtn.innerHTML = ''; // 기존 텍스트 비우기
+        rightBtn.innerHTML = ''; // 기존 텍스트 비우기
+        jumpBtn.innerHTML = ''; // 기존 텍스트 비우기
+        bubbleJumpBtn.innerHTML = ''; // 기존 텍스트 비우기
+
+        // 이미지 요소 생성 및 버튼에 추가
+        const leftImg = document.createElement('img'); leftImg.src = "./Leftbutton.jpg";
+        const rightImg = document.createElement('img'); rightImg.src = "./Rightbutton.jpg";
+        const jumpImg = document.createElement('img'); jumpImg.src = "./Jumpbutton.jpg";
+        const bubbleImgBtn = document.createElement('img'); bubbleImgBtn.src = "./Bubblebutton.jpg";
+
+        leftBtn.appendChild(leftImg);
+        rightBtn.appendChild(rightImg);
+        jumpBtn.appendChild(jumpImg);
+        bubbleJumpBtn.appendChild(bubbleImgBtn);
+
 
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
         leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
@@ -839,7 +874,10 @@
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') baby.dx = 0;
     });
 
-    const allGameImages = [babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg];
+    const allGameImages = [
+        babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg,
+        leftButtonImg, rightButtonImg, jumpButtonImg, bubbleButtonImg // 새로 로드된 버튼 이미지 객체들을 포함
+    ];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
         else { img.onload = resolve; img.onerror = reject; }
