@@ -11,7 +11,7 @@
   <style>
     body {
       margin: 0;
-      overflow: hidden; /* 기본적으로 전체 페이지 스크롤 방지. 오버레이는 자체 스크롤 가짐 */
+      overflow: hidden; 
       font-family: 'Arial', sans-serif;
       background-color: #f0f0f0;
       height: 100vh; /* 브라우저 뷰포트 높이 고정 */
@@ -72,7 +72,7 @@
 
     #startScreen, #winScreen, #gameOverScreen {
       position: absolute; width: 100%;
-      height: 100vh; /* 초기값. JS에서 동적으로 변경됩니다. */
+      height: 100vh; /* JS에서 동적으로 변경될 것입니다. */
       background: linear-gradient(to bottom, #a8e0f7, #d9f7fc);
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; z-index: 10; text-align: center;
@@ -139,7 +139,7 @@
         border: 3px solid rgba(230, 138, 0, 0.9);
         box-shadow: 0 4px rgba(230, 138, 0, 0.9);
     }
-    /* 버튼 내부 이미지 스타일 */
+    /* 버튼 내부 이미지 스타일 (새로 추가) */
     #mobileControls img {
         width: 100%; /* 버튼 크기에 맞춰 이미지 채우기 */
         height: 100%;
@@ -244,9 +244,13 @@
 
   <div id="mobileControls">
     <div id="moveBtns">
-      <div id="leftBtn"></div> <div id="rightBtn"></div> </div>
+      <div id="leftBtn"></div> 
+      <div id="rightBtn"></div> 
+    </div>
     <div id="actionBtns">
-      <div id="bubbleJumpBtn"></div> <div id="jumpBtn"></div> </div>
+      <div id="bubbleJumpBtn"></div> 
+      <div id="jumpBtn"></div> 
+    </div>
   </div>
 
   <div id="orientation-alert">
@@ -257,17 +261,15 @@
 
 
   <script>
-    // 오버레이 화면의 높이를 동적으로 설정하여 스크롤 가능하게 만드는 함수
     function setScreenHeights() {
         const screenHeight = window.innerHeight;
-        // 브라우저 UI 때문에 가려지는 부분을 고려하여 높이에 여유를 줌 (예: 100px 추가)
         const scrollableHeight = screenHeight + 100; // 100px는 예시. 필요에 따라 조정
 
         const screens = [
             document.getElementById('startScreen'),
             document.getElementById('winScreen'),
             document.getElementById('gameOverScreen'),
-            document.getElementById('orientation-alert')
+            document.getElementById('orientation-alert') 
         ];
 
         screens.forEach(screen => {
@@ -303,7 +305,7 @@
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
 
-    // 새로운 버튼 이미지 로드
+    // 새로운 버튼 이미지 로드 (경로 확인)
     const leftButtonImg = new Image(); leftButtonImg.src = "./Leftbutton.jpg";
     const rightButtonImg = new Image(); rightButtonImg.src = "./Rightbutton.jpg";
     const jumpButtonImg = new Image(); jumpButtonImg.src = "./Jumpbutton.jpg";
@@ -420,8 +422,7 @@
                 }
             }
         }
-        // 화면 방향이 바뀔 때마다 오버레이 화면 높이 재설정
-        setScreenHeights(); 
+        setScreenHeights(); // 화면 방향이 바뀔 때마다 오버레이 화면 높이 재설정
     }
 
     function generateLevel() {
@@ -854,6 +855,7 @@
         jumpBtn.innerHTML = '';
         bubbleJumpBtn.innerHTML = '';
 
+        // 이미지 요소 생성 및 추가 (img.src가 로드 완료될 때까지 기다리지 않고 즉시 추가)
         const leftImg = document.createElement('img'); leftImg.src = './Leftbutton.jpg';
         const rightImg = document.createElement('img'); rightImg.src = './Rightbutton.jpg';
         const jumpImg = document.createElement('img'); jumpImg.src = './Jumpbutton.jpg';
@@ -863,7 +865,6 @@
         rightBtn.appendChild(rightImg);
         jumpBtn.appendChild(jumpImg);
         bubbleJumpBtn.appendChild(bubbleImgBtn);
-
 
         // 기존 이벤트 리스너 제거 (중복 등록 방지)
         leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
@@ -890,7 +891,7 @@
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
 
 
-    setupMobileControls();
+    setupMobileControls(); // 페이지 로드 시 바로 버튼 세팅
 
     document.addEventListener('keydown', e => {
       if (!gameStarted || window.innerWidth < window.innerHeight) return;
