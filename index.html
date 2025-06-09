@@ -316,8 +316,10 @@
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
-    const diaperImg = new Image(); diaperImg.src = "./diaper.png";
+    const diaperImg = new Image(); diaperImg.src = "./diaper.png"; // diaper.png는 더 이상 사용되지 않지만 로드 유지
     const pacifierProjectileImg = new Image(); pacifierProjectileImg.src = "./pacifier.png";
+    // 쪽쪽이 아이템 이미지 (pacifier.png 재활용)
+    const pacifierItemImg = new Image(); pacifierItemImg.src = "./pacifier.png";
 
 
     const bgm = document.getElementById('bgm');
@@ -345,30 +347,31 @@
       lastShotTime: 0,    
       shootCoolDown: 200  
     };
-    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = [], pacifiers = []; 
+    // pacifierItems 배열 추가 (수집 아이템으로서의 쪽쪽이)
+    const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = [], pacifiers = [], pacifierItems = []; 
     const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
-        { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false }, 
-        { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: true }, 
-        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, diaper: false },
-        { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: true }, 
-        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: true }, 
-        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false },
-        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, diaper: false } 
+        { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false }, 
+        { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: true }, // 8단계에 쪽쪽이 아이템 추가
+        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
+        { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true }, // 13단계에 쪽쪽이 아이템 추가
+        { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true }, // 18단계에 쪽쪽이 아이템 추가
+        { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false },
+        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false } 
     ];
 
     const startButton = document.getElementById('startButton');
@@ -452,9 +455,10 @@
     function generateLevel() {
       platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
       hearts.length = 0; 
-      diapers.length = 0; 
-      pacifiers.length = 0; 
-      
+      // diapers.length = 0; // 기저귀 배열 초기화 제거 (더 이상 사용 안 함)
+      pacifiers.length = 0; // 발사된 총알 초기화
+      pacifierItems.length = 0; // 쪽쪽이 아이템 배열 초기화
+
       const config = stageConfigs[currentStage - 1];
       if (!config) return;
 
@@ -551,13 +555,14 @@
           }
       }
 
-      if (config.diaper) { 
+      // 쪽쪽이 아이템 배치 로직 (config.pacifierItem이 true인 스테이지에서)
+      if (config.pacifierItem) { 
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
-              const diaperPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
-              diapers.push({
-                  x: diaperPlatform.x + diaperPlatform.width / 2 - 20, 
-                  y: diaperPlatform.y - 40, 
+              const pacifierItemPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
+              pacifierItems.push({ // pacifierItems 배열에 추가
+                  x: pacifierItemPlatform.x + pacifierItemPlatform.width / 2 - 20, 
+                  y: pacifierItemPlatform.y - 40, 
                   width: 30, height: 30, 
                   collected: false
               });
@@ -584,7 +589,7 @@
       baby.lives = 5; 
       baby.bubblesLeft = baby.maxBubbles; 
       lastBubbleRechargeTime = 0; 
-      baby.pacifiersLeft = 0; 
+      baby.pacifiersLeft = 0; // 게임 시작 시 초기화
       baby.lastShotTime = 0; 
 
       generateLevel(); 
@@ -616,7 +621,7 @@
         camera.y = worldHeight - canvas.height; 
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
-        // baby.pacifiersLeft = 0; // 쪽쪽이 개수를 초기화하지 않습니다.
+        // baby.pacifiersLeft는 여기에서 초기화하지 않습니다 (스테이지 간 유지).
         baby.lastShotTime = 0;    
     }
 
@@ -739,9 +744,10 @@
           }
       });
 
-      diapers.forEach(d => {
-          if (!d.collected) {
-              ctx.drawImage(diaperImg, d.x, d.y, d.width, d.height);
+      // 쪽쪽이 아이템 그리기 (diapers 대신 pacifierItems 사용)
+      pacifierItems.forEach(pItem => {
+          if (!pItem.collected) {
+              ctx.drawImage(pacifierItemImg, pItem.x, pItem.y, pItem.width, pItem.height);
           }
       });
 
@@ -848,13 +854,13 @@
           }
       });
 
-      // 기저귀 아이템 충돌 처리 (쪽쪽이 충전)
-      diapers.forEach((d, index) => {
-          if (!d.collected &&
-              baby.x < d.x + d.width && baby.x + baby.width > d.x &&
-              baby.y < d.y + d.height && baby.y + baby.height > d.y) {
+      // 쪽쪽이 아이템 충돌 처리 (diapers 대신 pacifierItems 사용)
+      pacifierItems.forEach((pItem, index) => {
+          if (!pItem.collected &&
+              baby.x < pItem.x + pItem.width && baby.x + baby.width > pItem.x &&
+              baby.y < pItem.y + pItem.height && baby.y + baby.height > pItem.y) {
               baby.pacifiersLeft = Math.min(baby.maxPacifiers, baby.pacifiersLeft + 20); 
-              d.collected = true; 
+              pItem.collected = true; 
           }
       });
 
@@ -1029,7 +1035,7 @@
 
     const allGameImages = [
         babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg, diaperImg, 
-        pacifierProjectileImg 
+        pacifierProjectileImg, pacifierItemImg // pacifierItemImg도 로드 목록에 추가
     ];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
