@@ -391,6 +391,36 @@
     const pacifierGauge = document.getElementById('pacifierGauge'); 
     const topRightHudRow = document.getElementById('topRightHudRow'); 
 
+    // 미리 생성된 UI 요소들을 저장할 배열
+    let bubbleIcons = [];
+    let pacifierIconImg;
+    let pacifierCountSpan;
+
+    // UI 요소들을 한 번만 생성하고 초기화하는 함수
+    function initializeUIElements() {
+        // 버블 게이지 초기화
+        bubbleGauge.innerHTML = ''; // 기존 요소 제거
+        for(let i = 0; i < baby.maxBubbles; i++) { 
+            const img = document.createElement('img');
+            img.src = './bubble.png';
+            img.className = 'bubble-icon';
+            bubbleGauge.appendChild(img);
+            bubbleIcons.push(img); // 배열에 저장
+        }
+
+        // 쪽쪽이 게이지 초기화
+        pacifierGauge.innerHTML = ''; // 기존 요소 제거
+        pacifierIconImg = document.createElement('img');
+        pacifierIconImg.src = './pacifier.png'; 
+        pacifierIconImg.className = 'pacifier-icon';
+        pacifierGauge.appendChild(pacifierIconImg);
+
+        pacifierCountSpan = document.createElement('span');
+        pacifierCountSpan.className = 'pacifier-count';
+        pacifierGauge.appendChild(pacifierCountSpan);
+    }
+
+
     function enterFullscreen() {
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
@@ -783,27 +813,19 @@
         
         livesDisplay.textContent = '❤️ ' + Math.max(0, baby.lives - 1); 
         
-        pacifierGauge.innerHTML = '';
-        const pacifierIconImg = document.createElement('img');
-        pacifierIconImg.src = './pacifier.png'; 
-        pacifierIconImg.className = 'pacifier-icon';
-        pacifierGauge.appendChild(pacifierIconImg);
-
-        const pacifierCountSpan = document.createElement('span');
-        pacifierCountSpan.className = 'pacifier-count';
+        // 쪽쪽이 게이지 업데이트 (요소 재생성하지 않고 텍스트만 변경)
         pacifierCountSpan.textContent = baby.pacifiersLeft;
-        pacifierGauge.appendChild(pacifierCountSpan);
 
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         
-        bubbleGauge.innerHTML = '';
-        for(let i = 0; i < baby.maxBubbles; i++) { 
-            const img = document.createElement('img');
-            img.src = './bubble.png';
-            img.className = 'bubble-icon';
-            if (i >= baby.bubblesLeft) img.classList.add('empty');
-            bubbleGauge.appendChild(img);
-        }
+        // 버블 게이지 업데이트 (요소 재생성하지 않고 클래스 토글)
+        bubbleIcons.forEach((img, i) => {
+            if (i >= baby.bubblesLeft) {
+                img.classList.add('empty');
+            } else {
+                img.classList.remove('empty');
+            }
+        });
     }
 
     function update(time = 0) {
@@ -1014,6 +1036,8 @@
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
     function handleShootTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) shootPacifier(); } 
 
+    // UI 요소들을 먼저 초기화하도록 호출합니다.
+    initializeUIElements();
     setupMobileControls();
 
     document.addEventListener('keydown', e => {
