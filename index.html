@@ -43,13 +43,19 @@
         gap: 5px; /* Stage와 Score 간격 */
         align-items: flex-start; /* 왼쪽 정렬 */
     }
+    /* 변경: Bubble Gauge가 leftUI에 포함되도록 스타일 조정 */
+    #leftUI #bubbleGauge {
+        margin-top: 10px; /* Stage/Score 아래로 약간의 간격 */
+        align-self: flex-start; /* 왼쪽 정렬 유지 */
+    }
+
     #rightUI {
         display: flex;
         flex-direction: column; /* 세로로 쌓이도록 변경 */
         gap: 5px; /* 목숨, 시간, 버블 갯수 간격 */
         align-items: flex-end; /* 오른쪽 정렬 */
     }
-    /* Bubble Gauge를 rightUI 안에 배치하면서 스타일 조정 */
+    /* Bubble Gauge를 rightUI 안에 배치하면서 스타일 조정 (이제 leftUI로 이동) */
     #bubbleGauge {
         display: flex;
         gap: 5px;
@@ -58,7 +64,6 @@
         background-color: transparent; /* 배경 제거 */
         padding: 0; /* 패딩 제거 */
         box-shadow: none; /* 그림자 제거 */
-        margin-top: 10px; /* 시간 아래로 약간의 간격 */
     }
 
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
@@ -232,7 +237,8 @@
     /* 초기 로딩 시 startScreen만 보이도록 설정 (다른 화면은 기본적으로 숨겨짐) */
     #startScreen { display: flex; }
     #winScreen, #gameOverScreen { display: none; }
-    #uiLayer, #bubbleGauge, #mobileControls, #gameCanvas { display: none; }
+    /* 변경: #bubbleGauge는 이제 #leftUI 안에 있으므로 직접 display를 제어하지 않음 */
+    #uiLayer, #mobileControls, #gameCanvas { display: none; }
   </style>
 </head>
 <body>
@@ -261,14 +267,13 @@
     <div id="leftUI">
       <div id="stageDisplay">Stage 1</div>
       <div id="score">Score: 0</div>
-    </div>
+      <div id="bubbleGauge"></div> </div>
     <div id="rightUI">
       <div id="topRightHudRow">
           <div id="livesDisplay"></div> 
           <div id="pacifierGauge"></div> 
       </div>
       <div id="timerDisplay">⏰ 20</div>
-      <div id="bubbleGauge"></div>
     </div>
   </div>
 
@@ -438,7 +443,7 @@
         if (window.innerWidth < window.innerHeight) {
             document.getElementById('gameCanvas').style.display = 'none';
             document.getElementById('uiLayer').style.display = 'none';
-            document.getElementById('bubbleGauge').style.display = 'none';
+            // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
             document.getElementById('mobileControls').style.display = 'none';
             if (topRightHudRow) topRightHudRow.style.display = 'none';
 
@@ -455,7 +460,7 @@
             if (gameStarted) {
                 document.getElementById('gameCanvas').style.display = 'block';
                 document.getElementById('uiLayer').style.display = 'flex';
-                document.getElementById('bubbleGauge').style.display = 'flex';
+                // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
                 if (topRightHudRow) topRightHudRow.style.display = 'flex'; 
                 setupMobileControls();
                 update();
@@ -465,7 +470,7 @@
             } else {
                 document.getElementById('gameCanvas').style.display = 'none';
                 document.getElementById('uiLayer').style.display = 'none';
-                document.getElementById('bubbleGauge').style.display = 'none';
+                // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
                 document.getElementById('mobileControls').style.display = 'none';
                 if (topRightHudRow) topRightHudRow.style.display = 'none'; 
 
@@ -610,7 +615,7 @@
       gameOverScreen.style.display = 'none';
       document.getElementById('gameCanvas').style.display = 'block';
       document.getElementById('uiLayer').style.display = 'flex';
-      document.getElementById('bubbleGauge').style.display = 'flex';
+      // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
       if (topRightHudRow) topRightHudRow.style.display = 'flex'; 
 
       setupMobileControls();
@@ -681,7 +686,7 @@
         bgm.pause();
         document.getElementById('gameCanvas').style.display = 'none';
         document.getElementById('uiLayer').style.display = 'none';
-        document.getElementById('bubbleGauge').style.display = 'none';
+        // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
         document.getElementById('mobileControls').style.display = 'none';
         if (topRightHudRow) topRightHudRow.style.display = 'none'; 
 
@@ -718,7 +723,7 @@
         bgm.pause();
         document.getElementById('gameCanvas').style.display = 'none';
         document.getElementById('uiLayer').style.display = 'none';
-        document.getElementById('bubbleGauge').style.display = 'none';
+        // 변경: bubbleGauge의 display를 직접 제어하지 않고 leftUI/rightUI의 display로 제어
         document.getElementById('mobileControls').style.display = 'none';
         if (topRightHudRow) topRightHudRow.style.display = 'none'; 
 
@@ -1028,14 +1033,6 @@
         if (shootBtn) shootBtn.addEventListener('touchstart', handleShootTouchStart); 
     }
 
-    function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = -baby.speed; }
-    function handleLeftTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
-    function handleRightTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = baby.speed; }
-    function handleRightTouchEnd(e) { e.preventDefault(); if (gameStarted) baby.dx = 0; }
-    function handleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && !baby.isJumping && window.innerWidth > window.innerHeight) { baby.dy = baby.jumpPower; baby.isJumping = true; } }
-    function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
-    function handleShootTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) shootPacifier(); } 
-
     // UI 요소들을 먼저 초기화하도록 호출합니다.
     initializeUIElements();
     setupMobileControls();
@@ -1063,7 +1060,7 @@
     ];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
-        else { img.onload = resolve; img.onerror = reject; }
+        else { img.onload = resolve; img.onerror = () => reject(new Error(`Failed to load image: ${img.src}`)); }
     }));
     const audioPromise = new Promise((resolve, reject) => {
         bgm.oncanplaythrough = resolve; 
