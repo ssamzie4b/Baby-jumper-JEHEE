@@ -73,8 +73,6 @@
         background-color: transparent;
         padding: 0;
         box-shadow: none;
-        /* 하트 옆으로 옮기기 위해 margin-top을 없애거나 조정 */
-        /* margin-top: 5px; */ /* 기존 값 제거 */
     }
     .pacifier-icon {
         width: 30px; /* 쪽쪽이 아이콘 크기 */
@@ -144,12 +142,19 @@
     }
     #actionBtns {
         display: flex;
-        flex-direction: column; /* 액션 버튼들을 세로로 정렬 */
-        align-items: center; /* 가운데 정렬 */
-        gap: 10px; /* 액션 버튼 간 간격 유지 */
+        flex-direction: row; /* 액션 버튼들을 수평으로 정렬 */
+        align-items: flex-end; /* 하단 정렬 (버튼이 바닥에 붙도록) */
+        gap: 20px; /* BUBBLE과 JUMP 그룹 사이 간격 유지 */
+    }
+    /* JUMP와 SHOOT를 묶는 컨테이너 */
+    #jumpShootBtns {
+        display: flex;
+        flex-direction: column; /* 세로로 쌓이도록 */
+        align-items: center; /* 내부 버튼 가운데 정렬 */
+        gap: 10px; /* SHOOT와 JUMP 버튼 간 간격 */
     }
 
-    #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn, #shootBtn { /* shootBtn 추가 */
+    #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn, #shootBtn { 
         width: 70px;
         height: 70px;
         background-color: rgba(255, 159, 28, 0.7);
@@ -165,10 +170,10 @@
     }
     /* 버튼 내부 이미지 스타일 */
     #mobileControls img {
-        width: 100%; /* 버튼 크기에 맞춰 이미지 채우기 */
+        width: 100%; 
         height: 100%;
-        object-fit: contain; /* 이미지 비율 유지하며 버튼 안에 맞추기 */
-        padding: 5px; /* 이미지와 버튼 테두리 사이에 약간의 여백 */
+        object-fit: contain; 
+        padding: 5px; 
         box-sizing: border-box;
     }
 
@@ -275,9 +280,10 @@
       <div id="rightBtn">→</div>
     </div>
     <div id="actionBtns">
-      <div id="shootBtn">SHOOT</div> 
       <div id="bubbleJumpBtn">BUBBLE</div>
-      <div id="jumpBtn">JUMP</div>
+      <div id="jumpShootBtns"> <div id="shootBtn">SHOOT</div> 
+        <div id="jumpBtn">JUMP</div>
+      </div>
     </div>
   </div>
 
@@ -568,7 +574,7 @@
       document.getElementById('gameCanvas').style.display = 'block';
       document.getElementById('uiLayer').style.display = 'flex';
       document.getElementById('bubbleGauge').style.display = 'flex';
-      if (topRightHudRow) topRightHudRow.style.display = 'flex'; 
+      if (topRightHudRow) topRightHudRow.style.display = 'flex'; // startGame 시에 flex로 보이게
 
       setupMobileControls();
 
@@ -766,8 +772,9 @@
     function drawUI() {
         stageDisplay.textContent = `Stage ${currentStage} / ${totalStages}`;
         scoreText.textContent = `Score: ${score}`;
+        
+        // Lives Display 업데이트
         livesDisplay.textContent = '❤️ ' + Math.max(0, baby.lives - 1); 
-        timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         
         // 쪽쪽이 게이지 UI (아이콘 + 숫자)
         pacifierGauge.innerHTML = '';
@@ -781,6 +788,9 @@
         pacifierCountSpan.textContent = baby.pacifiersLeft;
         pacifierGauge.appendChild(pacifierCountSpan);
 
+        // 타이머 Display 업데이트
+        timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
+        
         // 버블 게이지 UI
         bubbleGauge.innerHTML = '';
         for(let i = 0; i < baby.maxBubbles; i++) { 
@@ -863,8 +873,9 @@
           let enemyRemoved = false; 
           for(let i = 0; i < enemies.length; i++) {
               const e = enemies[i];
+              // 총알이 적과 충돌했는지 검사 (적의 y좌표가 총알의 y좌표보다 위쪽에 있을 수 있으므로 e.y + e.height 검사)
               if (p.x < e.x + e.width && p.x + p.width > e.x &&
-                  p.y < e.y + e.height && p.y + e.height > p.y) { // 적-총알 충돌 조건 수정
+                  p.y < e.y + e.height && p.y + p.height > e.y) { 
                   enemies.splice(i, 1); 
                   pacifiers.splice(pIndex, 1); 
                   score += 20; 
