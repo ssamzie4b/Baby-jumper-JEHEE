@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-M-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Baby Jumper "Jehee" - Final Version</title>
 
@@ -43,13 +43,19 @@
         gap: 5px; /* Stage와 Score 간격 */
         align-items: flex-start; /* 왼쪽 정렬 */
     }
+    /* 변경: Bubble Gauge가 leftUI에 포함되도록 스타일 조정 */
+    #leftUI #bubbleGauge {
+        margin-top: 10px; /* Stage/Score 아래로 약간의 간격 */
+        align-self: flex-start; /* 왼쪽 정렬 유지 */
+    }
+
     #rightUI {
         display: flex;
         flex-direction: column; /* 세로로 쌓이도록 변경 */
         gap: 5px; /* 목숨, 시간, 버블 갯수 간격 */
         align-items: flex-end; /* 오른쪽 정렬 */
     }
-    /* Bubble Gauge를 rightUI 안에 배치하면서 스타일 조정 */
+    /* Bubble Gauge를 rightUI 안에 배치하면서 스타일 조정 (이제 leftUI로 이동) */
     #bubbleGauge {
         display: flex;
         gap: 5px;
@@ -58,7 +64,6 @@
         background-color: transparent; /* 배경 제거 */
         padding: 0; /* 패딩 제거 */
         box-shadow: none; /* 그림자 제거 */
-        margin-top: 10px; /* 시간 아래로 약간의 간격 */
     }
 
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
@@ -210,19 +215,19 @@
         display: none;
       }
       /* 가로 모드일 때 게임과 다른 UI를 표시 */
-      #gameCanvas {
-        display: block;
+      #gameCanvas, #uiLayer, #mobileControls { /* bubbleGauge는 uiLayer 안에 있으므로 여기서는 제거 */
+        display: flex; /* flex로 변경하여 내부 요소 정렬 */
       }
-      #uiLayer, #mobileControls {
-        display: flex;
+      #gameCanvas {
+        display: block; /* 캔버스는 block 유지 */
       }
     }
 
     /* 세로 모드일 때 게임 관련 UI 숨김 */
     @media screen and (orientation: portrait) {
-      #gameCanvas, #uiLayer, #bubbleGauge, #mobileControls,
+      #gameCanvas, #uiLayer, #mobileControls,
       #startScreen, #winScreen, #gameOverScreen {
-        display: none !important;
+        display: none; /* !important 제거 */
       }
       #orientation-alert {
         display: flex;
@@ -232,7 +237,7 @@
     /* 초기 로딩 시 startScreen만 보이도록 설정 (다른 화면은 기본적으로 숨겨짐) */
     #startScreen { display: flex; }
     #winScreen, #gameOverScreen { display: none; }
-    #uiLayer, #bubbleGauge, #mobileControls, #gameCanvas { display: none; }
+    #uiLayer, #mobileControls, #gameCanvas { display: none; }
   </style>
 </head>
 <body>
@@ -261,14 +266,13 @@
     <div id="leftUI">
       <div id="stageDisplay">Stage 1</div>
       <div id="score">Score: 0</div>
-    </div>
+      <div id="bubbleGauge"></div> </div>
     <div id="rightUI">
       <div id="topRightHudRow">
           <div id="livesDisplay"></div> 
           <div id="pacifierGauge"></div> 
       </div>
       <div id="timerDisplay">⏰ 20</div>
-      <div id="bubbleGauge"></div>
     </div>
   </div>
 
@@ -297,14 +301,17 @@
 
 
   <script>
+    // 전역 변수들 선언 (HTML 요소보다 먼저 접근하는 일이 없도록 주의)
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 800; canvas.height = 600;
+    const ctx = canvas ? canvas.getContext('2d') : null; // 캔버스가 null일 경우 대비
+    if (canvas) {
+        canvas.width = 800; canvas.height = 600;
+    }
 
-    let worldHeight = canvas.height * 2; 
+    let worldHeight = (canvas ? canvas.height : 600) * 2; 
 
     const camera = {
-      y: worldHeight - canvas.height,
+      y: worldHeight - (canvas ? canvas.height : 600),
       lerpFactor: 0.08
     };
 
@@ -318,7 +325,6 @@
     const heartImg = new Image(); heartImg.src = "./heart.png";
     const diaperImg = new Image(); diaperImg.src = "./diaper.png"; // diaper.png는 더 이상 사용되지 않지만 로드 유지
     const pacifierProjectileImg = new Image(); pacifierProjectileImg.src = "./pacifier.png";
-    // 쪽쪽이 아이템 이미지 (pacifier.png 재활용)
     const pacifierItemImg = new Image(); pacifierItemImg.src = "./pacifier.png";
 
 
@@ -334,7 +340,7 @@
     let lastBubbleRechargeTime = 0;
 
     const baby = {
-      x: canvas.width / 2 - 25, y: worldHeight - 80,
+      x: (canvas ? canvas.width : 800) / 2 - 25, y: worldHeight - 80,
       width: 50, height: 50, speed: 4,
       dx: 0, dy: 0, gravity: 0.4, jumpPower: -10,
       isJumping: false, 
@@ -347,9 +353,9 @@
       lastShotTime: 0,    
       shootCoolDown: 200  
     };
-    // pacifierItems 배열 추가 (수집 아이템으로서의 쪽쪽이)
+
     const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = [], pacifiers = [], pacifierItems = []; 
-    const goal = { x: canvas.width / 2 - 20, y: 50, width: 40, height: 40 };
+    const goal = { x: (canvas ? canvas.width : 800) / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
         { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false },
@@ -374,22 +380,10 @@
         { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false } 
     ];
 
-    const startButton = document.getElementById('startButton');
-    const restartButton = document.getElementById('restartButton');
-    const restartButtonGO = document.getElementById('restartButtonGO');
-    const startScreen = document.getElementById('startScreen');
-    const winScreen = document.getElementById('winScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const stageDisplay = document.getElementById('stageDisplay');
-    const scoreText = document.getElementById('score');
-    const bubbleGauge = document.getElementById('bubbleGauge');
-    const livesDisplay = document.getElementById('livesDisplay');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const rankingList = document.getElementById('rankingList');
-    const rankingListGO = document.getElementById('rankingListGO');
-    const orientationAlert = document.getElementById('orientation-alert');
-    const pacifierGauge = document.getElementById('pacifierGauge'); 
-    const topRightHudRow = document.getElementById('topRightHudRow'); 
+    // HTML 요소들은 DOMContentLoaded 이후에 접근해야 안전합니다.
+    let startButton, restartButton, restartButtonGO, startScreen, winScreen, gameOverScreen,
+        stageDisplay, scoreText, bubbleGauge, livesDisplay, timerDisplay, rankingList, rankingListGO,
+        orientationAlert, pacifierGauge, topRightHudRow, finalScoreGO;
 
     // 미리 생성된 UI 요소들을 저장할 배열
     let bubbleIcons = [];
@@ -398,26 +392,53 @@
 
     // UI 요소들을 한 번만 생성하고 초기화하는 함수
     function initializeUIElements() {
+        startButton = document.getElementById('startButton');
+        restartButton = document.getElementById('restartButton');
+        restartButtonGO = document.getElementById('restartButtonGO');
+        startScreen = document.getElementById('startScreen');
+        winScreen = document.getElementById('winScreen');
+        gameOverScreen = document.getElementById('gameOverScreen');
+        stageDisplay = document.getElementById('stageDisplay');
+        scoreText = document.getElementById('score');
+        bubbleGauge = document.getElementById('bubbleGauge');
+        livesDisplay = document.getElementById('livesDisplay');
+        timerDisplay = document.getElementById('timerDisplay');
+        rankingList = document.getElementById('rankingList');
+        rankingListGO = document.getElementById('rankingListGO');
+        orientationAlert = document.getElementById('orientation-alert');
+        pacifierGauge = document.getElementById('pacifierGauge'); 
+        topRightHudRow = document.getElementById('topRightHudRow');
+        finalScoreGO = document.getElementById('finalScoreGO'); // finalScoreGO도 가져옴
+
         // 버블 게이지 초기화
-        bubbleGauge.innerHTML = ''; // 기존 요소 제거
-        for(let i = 0; i < baby.maxBubbles; i++) { 
-            const img = document.createElement('img');
-            img.src = './bubble.png';
-            img.className = 'bubble-icon';
-            bubbleGauge.appendChild(img);
-            bubbleIcons.push(img); // 배열에 저장
+        if (bubbleGauge) { // bubbleGauge가 null이 아닌지 확인
+            bubbleGauge.innerHTML = ''; 
+            for(let i = 0; i < baby.maxBubbles; i++) { 
+                const img = document.createElement('img');
+                img.src = './bubble.png';
+                img.className = 'bubble-icon';
+                bubbleGauge.appendChild(img);
+                bubbleIcons.push(img); 
+            }
         }
 
         // 쪽쪽이 게이지 초기화
-        pacifierGauge.innerHTML = ''; // 기존 요소 제거
-        pacifierIconImg = document.createElement('img');
-        pacifierIconImg.src = './pacifier.png'; 
-        pacifierIconImg.className = 'pacifier-icon';
-        pacifierGauge.appendChild(pacifierIconImg);
+        if (pacifierGauge) { // pacifierGauge가 null이 아닌지 확인
+            pacifierGauge.innerHTML = ''; 
+            pacifierIconImg = document.createElement('img');
+            pacifierIconImg.src = './pacifier.png'; 
+            pacifierIconImg.className = 'pacifier-icon';
+            pacifierGauge.appendChild(pacifierIconImg);
 
-        pacifierCountSpan = document.createElement('span');
-        pacifierCountSpan.className = 'pacifier-count';
-        pacifierGauge.appendChild(pacifierCountSpan);
+            pacifierCountSpan = document.createElement('span');
+            pacifierCountSpan.className = 'pacifier-count';
+            pacifierGauge.appendChild(pacifierCountSpan);
+        }
+
+        // 이벤트 리스너도 여기서 연결
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        restartButtonGO.addEventListener('click', startGame);
     }
 
 
@@ -434,48 +455,47 @@
         }
     }
 
+    function setUIContainersDisplay(displayValue) {
+        if (document.getElementById('gameCanvas')) document.getElementById('gameCanvas').style.display = displayValue;
+        if (document.getElementById('uiLayer')) document.getElementById('uiLayer').style.display = displayValue;
+        if (document.getElementById('mobileControls')) document.getElementById('mobileControls').style.display = displayValue;
+        if (topRightHudRow) topRightHudRow.style.display = displayValue; // topRightHudRow도 제어
+    }
+
+    // 게임 상태를 나타내는 변수 추가
+    let currentGameState = 'startScreen'; // 'startScreen', 'playing', 'winScreen', 'gameOverScreen'
+
     function checkOrientation() {
         if (window.innerWidth < window.innerHeight) {
-            document.getElementById('gameCanvas').style.display = 'none';
-            document.getElementById('uiLayer').style.display = 'none';
-            document.getElementById('bubbleGauge').style.display = 'none';
-            document.getElementById('mobileControls').style.display = 'none';
-            if (topRightHudRow) topRightHudRow.style.display = 'none';
-
+            // 세로 모드일 때 모든 게임/UI 관련 요소를 숨김
+            setUIContainersDisplay('none');
             startScreen.style.display = 'none';
             winScreen.style.display = 'none';
             gameOverScreen.style.display = 'none';
-
             orientationAlert.style.display = 'flex';
-            gameStarted = false;
+            
+            gameStarted = false; // 게임 일시정지 상태로 변경
             bgm.pause();
         } else {
+            // 가로 모드일 때
             orientationAlert.style.display = 'none';
 
-            if (gameStarted) {
-                document.getElementById('gameCanvas').style.display = 'block';
-                document.getElementById('uiLayer').style.display = 'flex';
-                document.getElementById('bubbleGauge').style.display = 'flex';
-                if (topRightHudRow) topRightHudRow.style.display = 'flex'; 
+            // 현재 게임 상태에 따라 적절한 화면을 보여줌
+            if (currentGameState === 'playing') {
+                setUIContainersDisplay('flex'); // 게임 중일 때 UI를 보여줌
+                if (canvas) canvas.style.display = 'block'; // 캔버스는 block 유지
                 setupMobileControls();
-                update();
+                // update()는 이미 requestAnimationFrame으로 호출되고 있으므로 다시 호출할 필요 없음
                 bgm.play().catch(e => console.log("BGM 재생 오류:", e));
-                winScreen.style.display = 'none';
-                gameOverScreen.style.display = 'none';
-            } else {
-                document.getElementById('gameCanvas').style.display = 'none';
-                document.getElementById('uiLayer').style.display = 'none';
-                document.getElementById('bubbleGauge').style.display = 'none';
-                document.getElementById('mobileControls').style.display = 'none';
-                if (topRightHudRow) topRightHudRow.style.display = 'none'; 
-
-                if (gameOverScreen.style.display !== 'none') {
-                    gameOverScreen.style.display = 'flex';
-                } else if (winScreen.style.display !== 'none') {
-                    winScreen.style.display = 'flex';
-                } else {
-                    startScreen.style.display = 'flex';
-                }
+            } else if (currentGameState === 'winScreen') {
+                setUIContainersDisplay('none');
+                winScreen.style.display = 'flex';
+            } else if (currentGameState === 'gameOverScreen') {
+                setUIContainersDisplay('none');
+                gameOverScreen.style.display = 'flex';
+            } else { // 'startScreen' 또는 초기 상태
+                setUIContainersDisplay('none');
+                startScreen.style.display = 'flex';
             }
         }
     }
@@ -485,9 +505,8 @@
     function generateLevel() {
       platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
       hearts.length = 0; 
-      // diapers.length = 0; // 기저귀 배열 초기화 제거 (더 이상 사용 안 함)
-      pacifiers.length = 0; // 발사된 총알 초기화
-      pacifierItems.length = 0; // 쪽쪽이 아이템 배열 초기화
+      pacifiers.length = 0; 
+      pacifierItems.length = 0; 
 
       const config = stageConfigs[currentStage - 1];
       if (!config) return;
@@ -585,12 +604,11 @@
           }
       }
 
-      // 쪽쪽이 아이템 배치 로직 (config.pacifierItem이 true인 스테이지에서)
       if (config.pacifierItem) { 
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
               const pacifierItemPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
-              pacifierItems.push({ // pacifierItems 배열에 추가
+              pacifierItems.push({ 
                   x: pacifierItemPlatform.x + pacifierItemPlatform.width / 2 - 20, 
                   y: pacifierItemPlatform.y - 40, 
                   width: 30, height: 30, 
@@ -605,21 +623,20 @@
     }
 
     function startGame() {
+      currentGameState = 'playing'; // 게임 상태 업데이트
+      setUIContainersDisplay('flex'); // UI를 보여줌
+      if (canvas) canvas.style.display = 'block'; // 캔버스는 block 유지
       startScreen.style.display = 'none';
       winScreen.style.display = 'none';
       gameOverScreen.style.display = 'none';
-      document.getElementById('gameCanvas').style.display = 'block';
-      document.getElementById('uiLayer').style.display = 'flex';
-      document.getElementById('bubbleGauge').style.display = 'flex';
-      if (topRightHudRow) topRightHudRow.style.display = 'flex'; 
-
+      
       setupMobileControls();
 
       gameStarted = true; score = 0; currentStage = 1; 
       baby.lives = 5; 
       baby.bubblesLeft = baby.maxBubbles; 
       lastBubbleRechargeTime = 0; 
-      baby.pacifiersLeft = 0; // 게임 시작 시 초기화
+      baby.pacifiersLeft = 0; 
       baby.lastShotTime = 0; 
 
       generateLevel(); 
@@ -628,30 +645,26 @@
       bgm.play().catch(e => {
         console.log("BGM 재생 오류:", e);
       });
-      update();
+      requestAnimationFrame(update); // 게임 루프 시작
       enterFullscreen();
     }
-    startButton.addEventListener('click', startGame);
-    restartButton.addEventListener('click', startGame);
-    restartButtonGO.addEventListener('click', startGame);
 
     function resetPlayerPosition() {
         const config = stageConfigs[currentStage - 1];
         stageTimer = config ? config.timer : 20;
         
         if (config) {
-            worldHeight = canvas.height * 2 * config.lengthMultiplier;
+            worldHeight = (canvas ? canvas.height : 600) * 2 * config.lengthMultiplier;
         } else {
-            worldHeight = canvas.height * 2; 
+            worldHeight = (canvas ? canvas.height : 600) * 2; 
         }
 
-        baby.x = canvas.width / 2 - 25; 
+        baby.x = (canvas ? canvas.width : 800) / 2 - 25; 
         baby.y = worldHeight - 80; 
         baby.dy = 0; 
-        camera.y = worldHeight - canvas.height; 
+        camera.y = worldHeight - (canvas ? canvas.height : 600); 
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
-        // baby.pacifiersLeft는 여기에서 초기화하지 않습니다 (스테이지 간 유지).
         baby.lastShotTime = 0;    
     }
 
@@ -678,18 +691,15 @@
 
     function showGameOver() {
         gameStarted = false;
+        currentGameState = 'gameOverScreen'; // 게임 상태 업데이트
         bgm.pause();
-        document.getElementById('gameCanvas').style.display = 'none';
-        document.getElementById('uiLayer').style.display = 'none';
-        document.getElementById('bubbleGauge').style.display = 'none';
-        document.getElementById('mobileControls').style.display = 'none';
-        if (topRightHudRow) topRightHudRow.style.display = 'none'; 
-
-        finalScoreGO.textContent = score;
+        setUIContainersDisplay('none');
+        gameOverScreen.style.display = 'flex';
+        
+        if (finalScoreGO) finalScoreGO.textContent = score; // finalScoreGO가 로드된 후 접근
 
         const playerName = prompt(`GAME OVER!\nYour Score: ${score}\n\nEnter your name for the ranking:`, "AAA");
         updateAndShowRanking(playerName || "Guest", rankingListGO);
-        gameOverScreen.style.display = 'flex';
     }
 
     function advanceToNextStage() {
@@ -715,16 +725,13 @@
 
     function showWinScreen() {
         gameStarted = false;
+        currentGameState = 'winScreen'; // 게임 상태 업데이트
         bgm.pause();
-        document.getElementById('gameCanvas').style.display = 'none';
-        document.getElementById('uiLayer').style.display = 'none';
-        document.getElementById('bubbleGauge').style.display = 'none';
-        document.getElementById('mobileControls').style.display = 'none';
-        if (topRightHudRow) topRightHudRow.style.display = 'none'; 
+        setUIContainersDisplay('none');
+        winScreen.style.display = 'flex';
 
         const playerName = prompt(`CONGRATULATIONS!\nYour Final Score: ${score}\n\nEnter your name for the ranking:`, "ACE");
         updateAndShowRanking(playerName || "Guest", rankingList);
-        winScreen.style.display = 'flex';
     }
 
     function bubbleJump() {
@@ -751,6 +758,7 @@
 
 
     function draw() {
+      if (!ctx) return; // ctx가 유효한지 다시 한번 확인
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(0, -camera.y);
@@ -774,7 +782,6 @@
           }
       });
 
-      // 쪽쪽이 아이템 그리기 (diapers 대신 pacifierItems 사용)
       pacifierItems.forEach(pItem => {
           if (!pItem.collected) {
               ctx.drawImage(pacifierItemImg, pItem.x, pItem.y, pItem.width, pItem.height);
@@ -808,17 +815,20 @@
     }
 
     function drawUI() {
+        if (!stageDisplay || !scoreText || !livesDisplay || !timerDisplay || !pacifierCountSpan || !bubbleIcons.length) {
+            // UI 요소가 아직 로드되지 않았다면 그리지 않음
+            return; 
+        }
+
         stageDisplay.textContent = `Stage ${currentStage} / ${totalStages}`;
         scoreText.textContent = `Score: ${score}`;
         
         livesDisplay.textContent = '❤️ ' + Math.max(0, baby.lives - 1); 
         
-        // 쪽쪽이 게이지 업데이트 (요소 재생성하지 않고 텍스트만 변경)
         pacifierCountSpan.textContent = baby.pacifiersLeft;
 
         timerDisplay.textContent = '⏰ ' + Math.ceil(stageTimer);
         
-        // 버블 게이지 업데이트 (요소 재생성하지 않고 클래스 토글)
         bubbleIcons.forEach((img, i) => {
             if (i >= baby.bubblesLeft) {
                 img.classList.add('empty');
@@ -829,12 +839,14 @@
     }
 
     function update(time = 0) {
-      if (!gameStarted || window.innerWidth < window.innerHeight) return;
+      if (!gameStarted || window.innerWidth < window.innerHeight) {
+        // 게임이 중단되었거나 세로 모드일 때는 루프를 멈추고 더 이상 update를 요청하지 않음
+        return; 
+      }
       deltaTime = (time - lastTime) / 1000; lastTime = time;
       stageTimer -= deltaTime;
       if (stageTimer <= 0) { handleLoseLife(); }
 
-      // 버블 재충전 로직
       if (baby.bubblesLeft < baby.maxBubbles) {
           if (time - lastBubbleRechargeTime > BUBBLE_RECHARGE_INTERVAL) {
               baby.bubblesLeft++;
@@ -848,13 +860,13 @@
       baby.dy += baby.gravity; 
       baby.y += baby.dy;
 
-      const cameraTargetY = baby.y - canvas.height / 2;
+      const cameraTargetY = baby.y - (canvas ? canvas.height : 600) / 2;
       camera.y += (cameraTargetY - camera.y) * camera.lerpFactor;
       if (camera.y < 0) camera.y = 0;
-      if (camera.y > worldHeight - canvas.height) { camera.y = worldHeight - canvas.height; }
+      if (camera.y > worldHeight - (canvas ? canvas.height : 600)) { camera.y = worldHeight - (canvas ? canvas.height : 600); }
 
       if (baby.x < 0) baby.x = 0;
-      if (baby.x + baby.width > canvas.width) baby.x = canvas.width - baby.width;
+      if (baby.x + baby.width > (canvas ? canvas.width : 800)) baby.x = (canvas ? canvas.width : 800) - baby.width;
 
       if (baby.dy > 0) {
         platforms.forEach(p => {
@@ -876,7 +888,6 @@
           }
       });
 
-      // 쪽쪽이 아이템 충돌 처리 (diapers 대신 pacifierItems 사용)
       pacifierItems.forEach((pItem, index) => {
           if (!pItem.collected &&
               baby.x < pItem.x + pItem.width && baby.x + baby.width > pItem.x &&
@@ -886,7 +897,6 @@
           }
       });
 
-      // 쪽쪽이 총알 업데이트
       pacifiers.forEach((p, pIndex) => {
           p.y += p.dy; 
           p.life--;
@@ -917,7 +927,7 @@
             case 'normal': 
             case 'fast':
                 e.x += e.speed * e.direction;
-                if(e.x < 0 || e.x + e.width > canvas.width) e.direction *= -1;
+                if(e.x < 0 || e.x + e.width > (canvas ? canvas.width : 800)) e.direction *= -1;
                 break;
             case 'jumper':
                 e.dy += baby.gravity * 0.5; 
@@ -930,7 +940,7 @@
             case 'redDragon':
             case 'goldDragon':
                 e.x += e.speed * e.direction;
-                if(e.x < 0 || e.x + e.width > canvas.width) e.direction *= -1;
+                if(e.x < 0 || e.x + e.width > (canvas ? canvas.width : 800)) e.direction *= -1;
 
                 if (time - e.lastShotTime > e.shootInterval) {
                     const bubbleRadius = (e.type === 'goldDragon') ? 30 : 15;
@@ -962,7 +972,7 @@
           b.y += b.dy;
           b.life--;
 
-          if (b.x < -b.radius || b.x > canvas.width + b.radius || b.y < -b.radius || b.y > worldHeight + b.radius || b.life <= 0) {
+          if (b.x < -b.radius || b.x > (canvas ? canvas.width : 800) + b.radius || b.y < -b.radius || b.y > worldHeight + b.radius || b.life <= 0) {
               enemyBubbles.splice(index, 1);
               return;
           }
@@ -995,14 +1005,16 @@
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         const mobileControlsDiv = document.getElementById('mobileControls');
         if (!isMobile) {
-            mobileControlsDiv.style.display = 'none';
+            if (mobileControlsDiv) mobileControlsDiv.style.display = 'none';
             return;
         }
-        // 가로 모드일 때만 표시
-        if (window.innerWidth < window.innerHeight) {
-            mobileControlsDiv.style.display = 'none';
-        } else {
-            mobileControlsDiv.style.display = 'flex';
+        
+        if (mobileControlsDiv) {
+            if (window.innerWidth < window.innerHeight) {
+                mobileControlsDiv.style.display = 'none';
+            } else {
+                mobileControlsDiv.style.display = 'flex';
+            }
         }
 
         const leftBtn = document.getElementById('leftBtn');
@@ -1011,21 +1023,32 @@
         const bubbleJumpBtn = document.getElementById('bubbleJumpBtn');
         const shootBtn = document.getElementById('shootBtn'); 
 
-        leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
-        leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
-        rightBtn.removeEventListener('touchstart', handleRightTouchStart);
-        rightBtn.removeEventListener('touchend', handleRightTouchEnd);
-        jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
-        bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
-        if (shootBtn) shootBtn.removeEventListener('touchstart', handleShootTouchStart); 
-
-        leftBtn.addEventListener('touchstart', handleLeftTouchStart);
-        leftBtn.addEventListener('touchend', handleLeftTouchEnd);
-        rightBtn.addEventListener('touchstart', handleRightTouchStart);
-        rightBtn.addEventListener('touchend', handleRightTouchEnd);
-        jumpBtn.addEventListener('touchstart', handleJumpTouchStart);
-        bubbleJumpBtn.addEventListener('touchstart', handleBubbleJumpTouchStart);
-        if (shootBtn) shootBtn.addEventListener('touchstart', handleShootTouchStart); 
+        // 이전에 추가된 이벤트 리스너가 있다면 제거하여 중복 등록 방지
+        // (setupMobileControls는 orientationCheck에서 여러 번 호출될 수 있음)
+        if (leftBtn) {
+            leftBtn.removeEventListener('touchstart', handleLeftTouchStart);
+            leftBtn.removeEventListener('touchend', handleLeftTouchEnd);
+            leftBtn.addEventListener('touchstart', handleLeftTouchStart);
+            leftBtn.addEventListener('touchend', handleLeftTouchEnd);
+        }
+        if (rightBtn) {
+            rightBtn.removeEventListener('touchstart', handleRightTouchStart);
+            rightBtn.removeEventListener('touchend', handleRightTouchEnd);
+            rightBtn.addEventListener('touchstart', handleRightTouchStart);
+            rightBtn.addEventListener('touchend', handleRightTouchEnd);
+        }
+        if (jumpBtn) {
+            jumpBtn.removeEventListener('touchstart', handleJumpTouchStart);
+            jumpBtn.addEventListener('touchstart', handleJumpTouchStart);
+        }
+        if (bubbleJumpBtn) {
+            bubbleJumpBtn.removeEventListener('touchstart', handleBubbleJumpTouchStart);
+            bubbleJumpBtn.addEventListener('touchstart', handleBubbleJumpTouchStart);
+        }
+        if (shootBtn) {
+            shootBtn.removeEventListener('touchstart', handleShootTouchStart);
+            shootBtn.addEventListener('touchstart', handleShootTouchStart); 
+        }
     }
 
     function handleLeftTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) baby.dx = -baby.speed; }
@@ -1036,11 +1059,9 @@
     function handleBubbleJumpTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) bubbleJump(); }
     function handleShootTouchStart(e) { e.preventDefault(); if (gameStarted && window.innerWidth > window.innerHeight) shootPacifier(); } 
 
-    // UI 요소들을 먼저 초기화하도록 호출합니다.
-    initializeUIElements();
-    setupMobileControls();
-
+    // 키보드 이벤트 리스너는 DOM이 로드된 후에 바로 연결
     document.addEventListener('keydown', e => {
+      // 게임 시작 전에도 키보드 입력을 통해 특정 동작을 하게 할 수 있음 (예: 메뉴 탐색)
       if (!gameStarted || window.innerWidth < window.innerHeight) return;
       if (e.key === 'ArrowRight') baby.dx = baby.speed;
       if (e.key === 'ArrowLeft') baby.dx = -baby.speed;
@@ -1059,34 +1080,52 @@
 
     const allGameImages = [
         babyImg, platformImg, bubbleImg, goalImg, dragonImg, redDragonImg, goldDragonImg, heartImg, diaperImg, 
-        pacifierProjectileImg, pacifierItemImg // pacifierItemImg도 로드 목록에 추가
+        pacifierProjectileImg, pacifierItemImg 
     ];
     const imagePromises = allGameImages.map(img => new Promise((resolve, reject) => {
         if (img.complete) resolve();
-        else { img.onload = resolve; img.onerror = reject; }
+        else { img.onload = resolve; img.onerror = () => reject(new Error(`Failed to load image: ${img.src}`)); }
     }));
     const audioPromise = new Promise((resolve, reject) => {
-        bgm.oncanplaythrough = resolve; 
-        bgm.onerror = (e) => {
-            console.error("BGM 로딩 오류:", e);
-            reject(new Error("BGM could not be loaded. Check file path and format."));
-        };
-        setTimeout(() => {
-            if (bgm.readyState < 3) {
-                reject(new Error("BGM loading timed out."));
+        if (bgm) { // bgm 요소가 존재하는지 확인
+            bgm.oncanplaythrough = resolve; 
+            bgm.onerror = (e) => {
+                console.error("BGM 로딩 오류:", e);
+                reject(new Error("BGM could not be loaded. Check file path and format."));
+            };
+            setTimeout(() => {
+                if (bgm.readyState < 3) {
+                    reject(new Error("BGM loading timed out."));
+                }
+            }, 5000); 
+        } else {
+            resolve(); // bgm 요소가 없으면 바로 해결
+        }
+    });
+
+    // DOMContentLoaded 이벤트 리스너를 사용하여 문서가 완전히 로드된 후 스크립트 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeUIElements(); // HTML 요소 참조 및 UI 초기화
+        setupMobileControls(); // 모바일 컨트롤 초기화
+        
+        Promise.all(imagePromises, audioPromise).then(() => { 
+            if (startButton) {
+                startButton.disabled = false; 
+                startButton.textContent = 'Start Game';
             }
-        }, 5000); 
+            checkOrientation(); // 초기 화면 방향 확인 및 설정
+        }).catch(error => {
+            if (startButton) {
+                startButton.textContent = '에러! 새로고침 해주세요'; 
+                startButton.style.backgroundColor = 'red';
+            }
+            console.error("Failed to load game assets:", error);
+        });
     });
 
-    Promise.all(imagePromises, audioPromise).then(() => { 
-      startButton.disabled = false; startButton.textContent = 'Start Game';
-      checkOrientation(); 
-    }).catch(error => {
-      startButton.textContent = '에러! 새로고침 해주세요'; startButton.style.backgroundColor = 'red';
-      console.error("Failed to load game assets:", error);
-    });
-
-    window.addEventListener('load', checkOrientation);
+    // window.onload는 모든 이미지 등 리소스까지 로드된 후이므로 DOMContentLoaded가 더 빠르고 일반적입니다.
+    // 하지만 만약을 위해 남아있는 resize 이벤트는 window.onload가 더 적절할 수 있습니다.
+    // window.addEventListener('load', checkOrientation); // 이 부분은 DOMContentLoaded 내부 checkOrientation으로 충분
 
   </script>
 </body>
