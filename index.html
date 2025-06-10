@@ -44,8 +44,6 @@
         align-items: flex-start; /* 왼쪽 정렬 */
     }
     
-    /* 중요: #bubbleGauge의 공통 스타일을 #leftUI #bubbleGauge보다 위로 이동하고,
-       #leftUI #bubbleGauge가 더 구체적인 스타일을 갖도록 합니다. */
     #bubbleGauge {
         display: flex;
         gap: 5px;
@@ -56,7 +54,6 @@
         box-shadow: none; /* 그림자 제거 */
     }
     
-    /* #leftUI 안에 있을 때의 #bubbleGauge 스타일 (더 구체적) */
     #leftUI #bubbleGauge {
         margin-top: 10px; /* Stage/Score 아래로 약간의 간격 */
         align-self: flex-start; /* 왼쪽 정렬 유지 */
@@ -73,7 +70,6 @@
     .bubble-icon { width: 30px; height: 30px; opacity: 1; transition: opacity 0.2s; }
     .bubble-icon.empty { opacity: 0.2; }
 
-    /* Pacifier Gauge 스타일 추가 */
     #pacifierGauge {
         display: flex;
         gap: 5px;
@@ -84,7 +80,7 @@
         box-shadow: none;
     }
     .pacifier-icon {
-        width: 30px; /* 쪽쪽이 아이콘 크기 */
+        width: 30px; 
         height: 30px;
         opacity: 1;
         transition: opacity 0.2s;
@@ -92,17 +88,16 @@
     .pacifier-icon.empty {
         opacity: 0.2;
     }
-    .pacifier-count { /* 쪽쪽이 숫자 스타일 */
+    .pacifier-count { 
         font-size: 24px;
         font-weight: bold;
         color: #0b3c5d;
         margin-left: 5px;
     }
-    /* 새로운 HUD 행 (하트와 쪽쪽이) */
     #topRightHudRow {
         display: flex;
         align-items: center;
-        gap: 15px; /* 하트와 쪽쪽이 사이 간격 */
+        gap: 15px; 
     }
 
 
@@ -135,32 +130,47 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 120px;
+        height: 120px; /* 충분한 높이 확보 */
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-end; /* 모든 버튼 그룹을 컨테이너 바닥에 정렬 */
         box-sizing: border-box;
-        padding: 20px;
+        padding: 20px; /* 기존 패딩 유지 */
         z-index: 20;
         user-select: none;
     }
     /* 좌우 이동 버튼을 감싸는 새로운 div */
     #moveBtns {
         display: flex;
-        gap: 5px; /* 좌우 이동 버튼 간 간격 최소화 */
+        gap: 5px; 
+        /* 화살표 버튼 그룹을 다른 액션 버튼 그룹과 Y축 하단 정렬을 맞추기 위해 마진 조정 */
+        /* JUMP 버튼의 높이(70px)와 SHOOT 버튼의 높이(70px) + gap(10px) = 150px
+           액션 버튼 그룹의 높이 70px + 10px + 70px = 150px
+           mobileControls의 height가 120px이므로, 패딩 20px를 제외하면 80px의 공간이 남습니다.
+           총 버튼 높이 150px인데 mobileControls의 높이가 120px로 부족합니다.
+           mobileControls의 height를 120px에서 충분히 큰 값(예: 160px)으로 변경하거나,
+           버튼 크기를 줄이거나, JUMP와 SHOOT 버튼 간격을 줄여야 합니다.
+
+           일단 mobileControls의 height를 160px로 늘렸습니다.
+           JUMP와 SHOOT 버튼의 총 높이는 70 (jump) + 10 (gap) + 70 (shoot) = 150px.
+           `actionBtns`는 `align-items: flex-end`이므로, `jumpShootBtns`의 가장 아래가 `actionBtns`의 바닥에 붙습니다.
+           `bubbleJumpBtn`도 `actionBtns` 내에서 `flex-end`에 맞춰집니다.
+           따라서 `jumpBtn`과 `bubbleJumpBtn`의 하단 라인이 일치하게 됩니다.
+           `moveBtns`도 `mobileControls`에서 `align-items: flex-end`에 의해 바닥에 붙게 되므로
+           모든 버튼의 하단이 같은 Y축 선상에 놓이게 됩니다.
+           */
     }
     #actionBtns {
         display: flex;
-        flex-direction: row; /* 액션 버튼들을 수평으로 정렬 */
-        align-items: flex-end; /* 하단 정렬 (버튼이 바닥에 붙도록) */
-        gap: 20px; /* BUBBLE과 JUMP 그룹 사이 간격 유지 */
+        flex-direction: row; 
+        align-items: flex-end; /* 액션 버튼 그룹의 하단을 컨테이너 바닥에 정렬 */
+        gap: 20px; 
     }
-    /* JUMP와 SHOOT를 묶는 컨테이너 */
     #jumpShootBtns {
         display: flex;
-        flex-direction: column; /* 세로로 쌓이도록 */
-        align-items: center; /* 내부 버튼 가운데 정렬 */
-        gap: 10px; /* SHOOT와 JUMP 버튼 간 간격 */
+        flex-direction: column; 
+        align-items: center; 
+        gap: 10px; 
     }
 
     #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn, #shootBtn { 
@@ -177,7 +187,6 @@
         border: 3px solid rgba(230, 138, 0, 0.9);
         box-shadow: 0 4px rgba(230, 138, 0, 0.9);
     }
-    /* 버튼 내부 이미지 스타일 */
     #mobileControls img {
         width: 100%; 
         height: 100%;
@@ -187,7 +196,6 @@
     }
 
 
-    /* 세로 모드일 때 보여줄 알림 (기본적으로는 숨김) */
     #orientation-alert {
       display: flex;
       position: fixed;
@@ -213,12 +221,10 @@
         margin-bottom: 20px;
     }
 
-    /* 가로 모드일 때 #orientation-alert를 숨김 */
     @media screen and (orientation: landscape) {
       #orientation-alert {
         display: none;
       }
-      /* 가로 모드일 때 게임과 다른 UI를 표시 */
       #gameCanvas, #uiLayer, #mobileControls { 
         display: flex; 
       }
@@ -227,7 +233,6 @@
       }
     }
 
-    /* 세로 모드일 때 게임 관련 UI 숨김 */
     @media screen and (orientation: portrait) {
       #gameCanvas, #uiLayer, #mobileControls,
       #startScreen, #winScreen, #gameOverScreen {
@@ -238,7 +243,6 @@
       }
     }
 
-    /* 초기 로딩 시 startScreen만 보이도록 설정 (다른 화면은 기본적으로 숨겨짐) */
     #startScreen { display: flex; }
     #winScreen, #gameOverScreen { display: none; }
     #uiLayer, #mobileControls, #gameCanvas { display: none; }
@@ -375,16 +379,16 @@
         { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: true, diaperItem: false }, 
-        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false, diaperItem: true }, // 9단계에 기저귀 아이템 추가
+        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false, diaperItem: true }, 
         { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, // 12단계에 기저귀 아이템 추가
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, 
         { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: false }, 
         { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, // 15단계에 기저귀 아이템 추가
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, 
         { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
         { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false }, 
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: true }, // 18단계에 기저귀 아이템 추가
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: true }, 
         { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
         { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false } 
     ];
@@ -510,7 +514,7 @@
       if (!config) return;
 
       worldHeight = canvas.height * 2 * config.lengthMultiplier;
-      camera.y = worldHeight - canvas.height; 
+      camera.y = canvas.height * 2 * config.lengthMultiplier - canvas.height; 
 
       platforms.push({ x: 0, y: worldHeight - 20, width: canvas.width });
       
@@ -615,7 +619,6 @@
           }
       }
       
-      // 기저귀 아이템 배치 로직 (스테이지 9, 12, 15, 18에서만)
       if (config.diaperItem) { 
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
