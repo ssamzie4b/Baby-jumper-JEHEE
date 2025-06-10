@@ -277,7 +277,7 @@
   </div>
 
   <canvas id="gameCanvas"></canvas>
-  <audio id="bgm" src="./bgm.mp3" loop></audio>
+  <audio id="bgm" src="./bgm.mpm" loop></audio>
 
   <div id="mobileControls">
     <div id="moveBtns">
@@ -339,10 +339,14 @@
     const BUBBLE_RECHARGE_INTERVAL = 5000; 
     let lastBubbleRechargeTime = 0;
 
-    // 변경된 부분: SUPER_BABY_DURATION을 15초로 늘림
-    const SUPER_BABY_DURATION = 15000; 
+    const SUPER_BABY_DURATION = 15000; // 15초로 변경
     let isSuperBaby = false;
     let superBabyStartTime = 0;
+    
+    // 새로운 변수 추가: 무적 상태
+    let isInvincible = false;
+    let invincibleStartTime = 0;
+    const INVINCIBLE_DURATION = 2000; // 2초 무적
 
     const baby = {
       x: (canvas ? canvas.width : 800) / 2 - 25, y: worldHeight - 80,
@@ -646,9 +650,10 @@
       lastBubbleRechargeTime = 0; 
       baby.pacifiersLeft = 0; 
       baby.lastShotTime = 0; 
-      // 변경된 부분: 게임 시작 시 Super Baby 상태 초기화
       isSuperBaby = false; 
       superBabyStartTime = 0;
+      isInvincible = true; // 게임 시작 시 무적 상태 활성화
+      invincibleStartTime = performance.now(); // 현재 시간을 무적 시작 시간으로 설정
 
       generateLevel(); 
       resetPlayerPosition(); 
@@ -679,18 +684,20 @@
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
         baby.lastShotTime = 0;    
-        // 변경된 부분: isSuperBaby와 superBabyStartTime 초기화 제거
-        // isSuperBaby = false; 
+        // isSuperBaby와 superBabyStartTime은 스테이지를 넘어가도 유지됨
+        // 무적 상태 활성화 (새 스테이지 진입 또는 리스폰 시)
+        isInvincible = true;
+        invincibleStartTime = performance.now();
     }
 
     function handleLoseLife() {
-        if (isSuperBaby) return; 
+        if (isSuperBaby || isInvincible) return; // SuperBaby 또는 무적 상태일 때는 목숨을 잃지 않음
 
         baby.lives--;
         if (baby.lives <= 0) {
             showGameOver();
         } else {
-            resetPlayerPosition();
+            resetPlayerPosition(); // 리스폰 시 무적 상태 적용
         }
     }
 
@@ -736,7 +743,7 @@
             showWinScreen();
         } else {
             generateLevel(); 
-            resetPlayerPosition(); 
+            resetPlayerPosition(); // 다음 스테이지 진입 시 무적 상태 적용
         }
     }
 
@@ -782,6 +789,11 @@
 
       if (isSuperBaby) {
           ctx.filter = `brightness(1.5) contrast(1.2) hue-rotate(${Math.sin(lastTime / 100) * 360}deg)`; 
+      }
+      
+      // 무적 상태일 때 플레이어 깜빡임 효과
+      if (isInvincible && (Math.floor(lastTime / 100) % 2 === 0)) {
+          ctx.globalAlpha = 0.5; // 투명도 조절로 깜빡임 효과
       }
 
       ctx.fillStyle = '#d0f4f7';
@@ -837,7 +849,7 @@
           ctx.drawImage(pacifierProjectileImg, p.x, p.y, p.width, p.height);
       });
 
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = 1; // Alpha 값 초기화
       ctx.filter = 'none'; 
       ctx.restore();
     }
@@ -875,6 +887,11 @@
 
       if (isSuperBaby && time - superBabyStartTime > SUPER_BABY_DURATION) {
           isSuperBaby = false; 
+      }
+      
+      // 무적 상태 시간 확인 및 해제
+      if (isInvincible && time - invincibleStartTime > INVINCIBLE_DURATION) {
+          isInvincible = false;
       }
 
 
@@ -1008,7 +1025,7 @@
             if (isSuperBaby) {
                 enemies.splice(index, 1);
                 score += 50; 
-            } else {
+            } else if (!isInvincible) { // 무적 상태가 아닐 때만 목숨 잃음
                 handleLoseLife(); 
             }
         }
@@ -1028,7 +1045,7 @@
               baby.y < b.y + b.radius && baby.y + baby.height > b.y - b.radius) {
               if (isSuperBaby) {
                   enemyBubbles.splice(index, 1);
-              } else {
+              } else if (!isInvincible) { // 무적 상태가 아닐 때만 목숨 잃음
                   handleLoseLife();
                   enemyBubbles.splice(index, 1);
               }
