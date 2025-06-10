@@ -339,7 +339,8 @@
     const BUBBLE_RECHARGE_INTERVAL = 5000; 
     let lastBubbleRechargeTime = 0;
 
-    const SUPER_BABY_DURATION = 8000; 
+    // 변경된 부분: SUPER_BABY_DURATION을 15초로 늘림
+    const SUPER_BABY_DURATION = 15000; 
     let isSuperBaby = false;
     let superBabyStartTime = 0;
 
@@ -362,26 +363,27 @@
     const goal = { x: (canvas ? canvas.width : 800) / 2 - 20, y: 50, width: 40, height: 40 };
 
     const stageConfigs = [
+        // 변경된 부분: stage 1-10의 lengthMultiplier를 1.5로 변경
         { stage: 1, normal: 0, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 2, normal: 1, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 3, normal: 2, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 4, normal: 3, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
-        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
+        { stage: 5, normal: 4, fast: 0, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false }, 
         { stage: 6, normal: 3, fast: 2, jumper: 0, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 7, normal: 3, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
-        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: true, diaperItem: false },
-        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: true },
+        { stage: 8, normal: 7, fast: 2, jumper: 1, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: true, diaperItem: false }, 
+        { stage: 9, normal: 6, fast: 4, jumper: 2, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: true }, 
         { stage: 10, normal: 4, fast: 8, jumper: 3, redDragon: 0, goldDragon: 0, lengthMultiplier: 1.5, timer: 20, heart: false, pacifierItem: false, diaperItem: false },
         { stage: 11, normal: 4, fast: 10, jumper: 3, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true },
-        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: false },
+        { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, 
+        { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: false }, 
         { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true },
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, 
         { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: true },
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false }, 
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: true }, 
         { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false }
+        { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false } 
     ];
 
     let startButton, restartButton, restartButtonGO, startScreen, winScreen, gameOverScreen,
@@ -644,7 +646,9 @@
       lastBubbleRechargeTime = 0; 
       baby.pacifiersLeft = 0; 
       baby.lastShotTime = 0; 
+      // 변경된 부분: 게임 시작 시 Super Baby 상태 초기화
       isSuperBaby = false; 
+      superBabyStartTime = 0;
 
       generateLevel(); 
       resetPlayerPosition(); 
@@ -675,7 +679,8 @@
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
         baby.lastShotTime = 0;    
-        isSuperBaby = false; 
+        // 변경된 부분: isSuperBaby와 superBabyStartTime 초기화 제거
+        // isSuperBaby = false; 
     }
 
     function handleLoseLife() {
