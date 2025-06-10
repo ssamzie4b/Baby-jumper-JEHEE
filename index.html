@@ -320,7 +320,6 @@
     };
 
     const babyImg = new Image(); babyImg.src = "./baby.png";
-    // 새 이미지 로드: 초사이언 아기
     const superBabyImg = new Image(); superBabyImg.src = "./superbaby.png";
     const platformImg = new Image(); platformImg.src = "./platform.png";
     const bubbleImg = new Image(); bubbleImg.src = "./bubble.png";
@@ -329,7 +328,7 @@
     const redDragonImg = new Image(); redDragonImg.src = "./reddragon.png";
     const goldDragonImg = new Image(); goldDragonImg.src = "./golddragon.png";
     const heartImg = new Image(); heartImg.src = "./heart.png";
-    const diaperImg = new Image(); diaperImg.src = "./diaper.png"; // 기저귀 아이템 이미지
+    const diaperImg = new Image(); diaperImg.src = "./diaper.png"; 
     const pacifierProjectileImg = new Image(); pacifierProjectileImg.src = "./pacifier.png";
     const pacifierItemImg = new Image(); pacifierItemImg.src = "./pacifier.png";
 
@@ -345,8 +344,7 @@
     const BUBBLE_RECHARGE_INTERVAL = 5000; 
     let lastBubbleRechargeTime = 0;
 
-    // 초사이언 변신 관련 변수 추가
-    const SUPER_BABY_DURATION = 8000; // 8초 (밀리초)
+    const SUPER_BABY_DURATION = 8000; 
     let isSuperBaby = false;
     let superBabyStartTime = 0;
 
@@ -365,7 +363,6 @@
       shootCoolDown: 200  
     };
 
-    // diaperItems 배열 추가 (기저귀 아이템)
     const platforms = [], playerBubbles = [], enemies = [], enemyBubbles = [], hearts = [], diapers = [], pacifiers = [], pacifierItems = []; 
     const goal = { x: (canvas ? canvas.width : 800) / 2 - 20, y: 50, width: 40, height: 40 };
 
@@ -384,10 +381,10 @@
         { stage: 12, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, // 12단계에 기저귀 아이템 추가
         { stage: 13, normal: 3, fast: 12, jumper: 5, redDragon: 1, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: false }, 
         { stage: 14, normal: 3, fast: 12, jumper: 5, redDragon: 3, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
+        { stage: 15, normal: 3, fast: 12, jumper: 5, redDragon: 5, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, // 15단계에 기저귀 아이템 추가
         { stage: 16, normal: 3, fast: 12, jumper: 6, redDragon: 7, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
-        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: true }, // 17단계에 기저귀 아이템 추가
-        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: false }, 
+        { stage: 17, normal: 3, fast: 12, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false }, 
+        { stage: 18, normal: 5, fast: 15, jumper: 6, redDragon: 10, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: true, diaperItem: true }, // 18단계에 기저귀 아이템 추가
         { stage: 19, normal: 5, fast: 17, jumper: 8, redDragon: 12, goldDragon: 0, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false },
         { stage: 20, normal: 0, fast: 17, jumper: 8, redDragon: 12, goldDragon: 1, lengthMultiplier: 1.5, timer: 30, heart: true, pacifierItem: false, diaperItem: false } 
     ];
@@ -505,7 +502,7 @@
     function generateLevel() {
       platforms.length = 0; enemies.length = 0; enemyBubbles.length = 0; 
       hearts.length = 0; 
-      diapers.length = 0; // 기저귀 아이템 배열 초기화
+      diapers.length = 0; 
       pacifiers.length = 0; 
       pacifierItems.length = 0; 
 
@@ -618,15 +615,15 @@
           }
       }
       
-      // 기저귀 아이템 배치 로직 (스테이지 9, 12, 17에서만)
+      // 기저귀 아이템 배치 로직 (스테이지 9, 12, 15, 18에서만)
       if (config.diaperItem) { 
           const suitablePlatforms = platforms.filter(p => p.y < worldHeight - 200 && p.y > 200);
           if (suitablePlatforms.length > 0) {
               const diaperPlatform = suitablePlatforms[Math.floor(Math.random() * suitablePlatforms.length)];
-              diapers.push({ // diapers 배열에 추가
+              diapers.push({ 
                   x: diaperPlatform.x + diaperPlatform.width / 2 - 20, 
                   y: diaperPlatform.y - 40, 
-                  width: 40, height: 40, // 기저귀 이미지 크기
+                  width: 40, height: 40, 
                   collected: false
               });
           }
@@ -653,7 +650,7 @@
       lastBubbleRechargeTime = 0; 
       baby.pacifiersLeft = 0; 
       baby.lastShotTime = 0; 
-      isSuperBaby = false; // 게임 시작 시 초사이언 상태 초기화
+      isSuperBaby = false; 
 
       generateLevel(); 
       resetPlayerPosition(); 
@@ -684,11 +681,10 @@
         baby.bubblesLeft = baby.maxBubbles; 
         lastBubbleRechargeTime = 0; 
         baby.lastShotTime = 0;    
-        isSuperBaby = false; // 스테이지 전환 시 초사이언 상태 초기화
+        isSuperBaby = false; 
     }
 
     function handleLoseLife() {
-        // 초사이언 상태일 때는 목숨을 잃지 않음
         if (isSuperBaby) return; 
 
         baby.lives--;
@@ -785,15 +781,9 @@
       ctx.save();
       ctx.translate(0, -camera.y);
 
-      // 초사이언 상태일 때 화면 필터 적용
       if (isSuperBaby) {
-          // 다양한 필터 조합으로 반짝이는 느낌을 낼 수 있습니다.
-          // 예시: 밝기, 대비, 색조 회전 등을 조합
           ctx.filter = `brightness(1.5) contrast(1.2) hue-rotate(${Math.sin(lastTime / 100) * 360}deg)`; 
-          // ctx.filter = 'saturate(2) hue-rotate(90deg)'; // 다른 시도
-          // ctx.filter = 'brightness(1.5) drop-shadow(0 0 10px yellow)'; // 빛나는 그림자
       }
-
 
       ctx.fillStyle = '#d0f4f7';
       ctx.fillRect(0, 0, canvas.width, worldHeight);
@@ -802,9 +792,8 @@
       
       ctx.filter = 'sepia(1) saturate(10) hue-rotate(-50deg) brightness(1.1)'; 
       ctx.drawImage(goalImg, goal.x, goal.y, goal.width, goal.height);
-      ctx.filter = 'none'; // 골 이미지 필터는 여기서 초기화 (아기 필터에 영향 안주도록)
+      ctx.filter = 'none'; 
 
-      // 기저귀 아이템 그리기
       diapers.forEach(d => {
           if (!d.collected) {
               ctx.drawImage(diaperImg, d.x, d.y, d.width, d.height);
@@ -827,7 +816,6 @@
           }
       });
 
-      // 아기 캐릭터 그리기 (초사이언 상태에 따라 이미지 변경)
       ctx.drawImage(isSuperBaby ? superBabyImg : babyImg, baby.x, baby.y, baby.width, baby.height);
       
       playerBubbles.forEach((b, index) => {
@@ -851,7 +839,7 @@
       });
 
       ctx.globalAlpha = 1;
-      ctx.filter = 'none'; // 전체 캔버스 필터를 여기서 다시 초기화
+      ctx.filter = 'none'; 
       ctx.restore();
     }
 
@@ -886,9 +874,8 @@
       stageTimer -= deltaTime;
       if (stageTimer <= 0) { handleLoseLife(); }
 
-      // 초사이언 상태 시간 관리
       if (isSuperBaby && time - superBabyStartTime > SUPER_BABY_DURATION) {
-          isSuperBaby = false; // 8초가 지나면 초사이언 상태 해제
+          isSuperBaby = false; 
       }
 
 
@@ -942,14 +929,13 @@
           }
       });
 
-      // 기저귀 아이템 충돌 처리
       diapers.forEach((d, index) => {
           if (!d.collected &&
               baby.x < d.x + d.width && baby.x + baby.width > d.x &&
               baby.y < d.y + d.height && baby.y + baby.height > d.y) {
               d.collected = true; 
-              isSuperBaby = true; // 초사이언 상태 활성화
-              superBabyStartTime = time; // 시작 시간 기록
+              isSuperBaby = true; 
+              superBabyStartTime = time; 
           }
       });
 
@@ -1018,13 +1004,11 @@
                 break;
         }
 
-        // 아기 캐릭터와 적의 충돌 처리 (초사이언 상태일 때)
         if (baby.x < e.x + e.width && baby.x + baby.width > e.x &&
             baby.y < e.y + e.height && baby.y + baby.height > e.y) {
             if (isSuperBaby) {
-                // 초사이언 상태일 때 적과 부딪히면 적 제거
                 enemies.splice(index, 1);
-                score += 50; // 적 제거 시 추가 점수
+                score += 50; 
             } else {
                 handleLoseLife(); 
             }
@@ -1041,11 +1025,9 @@
               return;
           }
 
-          // 아기 캐릭터와 적 버블의 충돌 처리 (초사이언 상태일 때)
           if (baby.x < b.x + b.radius && baby.x + baby.width > b.x - b.radius &&
               baby.y < b.y + b.radius && baby.y + baby.height > b.y - b.radius) {
               if (isSuperBaby) {
-                  // 초사이언 상태일 때 적 버블과 부딪히면 버블 제거
                   enemyBubbles.splice(index, 1);
               } else {
                   handleLoseLife();
