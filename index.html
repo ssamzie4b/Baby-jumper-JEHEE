@@ -130,12 +130,12 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 120px; /* 충분한 높이 확보 */
+        height: 160px; /* 버튼들이 여유롭게 들어갈 수 있도록 높이 증가 */
         display: flex;
         justify-content: space-between;
         align-items: flex-end; /* 모든 버튼 그룹을 컨테이너 바닥에 정렬 */
         box-sizing: border-box;
-        padding: 20px; /* 기존 패딩 유지 */
+        padding: 20px; 
         z-index: 20;
         user-select: none;
     }
@@ -143,22 +143,10 @@
     #moveBtns {
         display: flex;
         gap: 5px; 
-        /* 화살표 버튼 그룹을 다른 액션 버튼 그룹과 Y축 하단 정렬을 맞추기 위해 마진 조정 */
-        /* JUMP 버튼의 높이(70px)와 SHOOT 버튼의 높이(70px) + gap(10px) = 150px
-           액션 버튼 그룹의 높이 70px + 10px + 70px = 150px
-           mobileControls의 height가 120px이므로, 패딩 20px를 제외하면 80px의 공간이 남습니다.
-           총 버튼 높이 150px인데 mobileControls의 높이가 120px로 부족합니다.
-           mobileControls의 height를 120px에서 충분히 큰 값(예: 160px)으로 변경하거나,
-           버튼 크기를 줄이거나, JUMP와 SHOOT 버튼 간격을 줄여야 합니다.
-
-           일단 mobileControls의 height를 160px로 늘렸습니다.
-           JUMP와 SHOOT 버튼의 총 높이는 70 (jump) + 10 (gap) + 70 (shoot) = 150px.
-           `actionBtns`는 `align-items: flex-end`이므로, `jumpShootBtns`의 가장 아래가 `actionBtns`의 바닥에 붙습니다.
-           `bubbleJumpBtn`도 `actionBtns` 내에서 `flex-end`에 맞춰집니다.
-           따라서 `jumpBtn`과 `bubbleJumpBtn`의 하단 라인이 일치하게 됩니다.
-           `moveBtns`도 `mobileControls`에서 `align-items: flex-end`에 의해 바닥에 붙게 되므로
-           모든 버튼의 하단이 같은 Y축 선상에 놓이게 됩니다.
-           */
+        /* 화살표 버튼들의 높이가 70px이고, JUMP 버튼의 높이도 70px입니다.
+           actionBtns의 align-items: flex-end에 의해 JUMP 버튼 하단이 정렬됩니다.
+           mobileControls도 align-items: flex-end이므로, moveBtns의 하단도 동일 선상에 놓이게 됩니다.
+           따라서 별도의 margin-bottom 조정 없이도 Y축 정렬이 맞아야 합니다. */
     }
     #actionBtns {
         display: flex;
@@ -170,7 +158,7 @@
         display: flex;
         flex-direction: column; 
         align-items: center; 
-        gap: 10px; 
+        gap: 10px; /* SHOOT와 JUMP 버튼 간 간격 */
     }
 
     #leftBtn, #rightBtn, #jumpBtn, #bubbleJumpBtn, #shootBtn { 
